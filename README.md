@@ -18,5 +18,5 @@ Bakalářská práce na téma "Využití operátoru křížení v kartézském g
 10.	Popsat jaké algoritmy jsem vymyslel a proč jsem je zvolil
 
 ## Plán na letní semestr:
-1. Projít spěšně zimním semestrem
-2. dopsat plán po splnění bodu 1.
+1. Projít úspěšně zimním semestrem
+2. Dopsat plán po splnění bodu 1.
