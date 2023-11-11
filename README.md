@@ -10,7 +10,7 @@ Bakalářská práce na téma "Využití operátoru křížení v kartézském g
 	3.	Nadpisy cca
 	4.	Todo text kde by přibližně měl být
 4.	Najít a zpracovat další případné zdroje
-5.	Začít se s bakalářskou prací
+5.	Začít s bakalářskou prací
 6.	Napsat dobrý abstrakt
 7.	Napsat úvod
 8.	Napsat rešerši na aktuální stav a řešení
