@@ -4,6 +4,7 @@
 - [Cartesian Genetic Programming](https://link.springer.com/book/10.1007/978-3-642-17310-3) (z1)
 - [Cartesian genetic programming: its status and future](https://link.springer.com/article/10.1007/s10710-019-09360-6) (z2)
 - [Towards Discrete Phenotypic Recombination in Cartesian Genetic Programming](https://link.springer.com/chapter/10.1007/978-3-031-14721-0_5) (z3)
+- [A Comparative Study on Crossover in Cartesian Genetic Programming](https://link.springer.com/chapter/10.1007/978-3-319-77553-1_13) (z4)
 
 ## Zdroje ke zvážení:
 - [Positional Independence and Recombination in Cartesian Genetic Programming](https://link.springer.com/chapter/10.1007/11729976_32)
@@ -94,6 +95,35 @@ the function look-up table has.
 >directly addressed by output genes. Then these nodes are examined to find out which
 >nodes they in turn require.
 
+
+### Neutral drift
+(z1)
+>We have already seen that in a CGP genotype there may be genes that are entirely
+>inactive, having no influence on the phenotype and hence on the fitness. Such inactive genes therefore have a neutral effect on genotype fitness. This phenomenon is
+>often referred to as neutrality. CGP genotypes are dominated by redundant genes.
+>For instance, Miller and Smith showed that in genotypes having 4000 nodes, the
+>percentage of inactive nodes is approximately 95%! [6].
+
+(z2)
+>The 1 + lambda
+>-inspired algorithm promotes neutral drift since often mutational ofspring difer 
+>only in inactive genes and so have equal ftness to their parent [69, 110, 119, 128, 
+>129]. Such identical ofspring can be detected before ftness evaluation so incurring no ftness calculation. Thus, even when it appears that the algorithm is stuck 
+>on a local optimum ftness value the search algorithm is exploring many possible 
+>diferent solutions by mutating diferent genotypes.
+
+### Alternativní genotypové reprezentace (z2)
+- Parallel distributed genetic programming
+- Modular
+- Real‑valued
+- Implicit context
+- Self‑modifying
+- Mixed‑type
+- Iterative
+- Diferentiable CGP
+- Graph programming
+- Positional CGP
+
 ## 2. Problémy s křížením
 
 ### Původní křížení v CGP (z1)
@@ -101,21 +131,23 @@ the function look-up table has.
 >one-point crossover operator was used in CGP (similar to the n-point crossover in
 >genetic algorithms) but was found to be disruptive to the subgraphs within the chromosome, and had a detrimental affect on the performance of CGP [5].
 
+
+### Hladkost a drsnost série fitness evaluací (z2)
+>Slaný and Sekanina examined how various crossover operators and standard 
+>mutation afected the smoothness and ruggedness of the series of ftness values of 
+>the best population member in each generation. They examined this in the domain 
+>of CGP applied to image flter design. They found that either point mutation (with 
+>lambda = 7) or single-point crossover where only one ofspring of the crossover operation 
+>is mutated and included into the new population, generated the smoothest ftness 
+>landscape.
+
 ## 3. Jak funguje CGP bez operátoru křížení
 - ***TODO*** najít nějaký vhodný zdroj který toto možná popisuje? Možná jen popsat mými slovy?
 - Využívá se pouze operátor pro mutace
 - Důležitý pojem - ***neutral drift*** - v podstatě mutace "non-coning" genů které se neprojeví na FIT hodnocení jednotlivce, ale pomáhá aby algorytmus nezůstal v lokálním minimu
 
-### Neutral drift
->We have already seen that in a CGP genotype there may be genes that are entirely
->inactive, having no influence on the phenotype and hence on the fitness. Such inactive genes therefore have a neutral effect on genotype fitness. This phenomenon is
->often referred to as neutrality. CGP genotypes are dominated by redundant genes.
->For instance, Miller and Smith showed that in genotypes having 4000 nodes, the
->percentage of inactive nodes is approximately 95%! [6].
 
-
-
-## 4. Možné algoritmy křížení
+## 4. Různé algoritmy křížení
 
 ### FP crossover operátor (z1)
 >Some work by Clegg et al. [2] has investigated crossover in CGP (and GP in general).
@@ -131,3 +163,90 @@ The results of the new approach appear promising when applied to two symbolic re
 >allows difficult multiple-output problems to be solved.
 
 ***TODO najít si definici cone-based crossover***
+
+### Diskrétní fenotypní rekombinace (z3)
+>We adapt discrete recombination in CGP by means of phenotypic functional
+>variation which is performed through the exchange of function genes of active
+>function nodes. The phenotype of a CGP individual is represented by its active
+>function nodes which are determined before the crossover procedure. After selecting two individuals, the minimum and a maximum number of active function
+>nodes of the two individuals is determined. The reason for this is that the size of
+>the phenotype in CGP is not fixed and can vary among individuals. To perform
+>the exchange of active function genes, the crossover procedure iterates over the
+>minimum number of active nodes. A binary decision is made by chance in each
+>iteration whether the function genes are swapped or kept. In the case that both
+>phenotypes differ in size, our method performs a special step in the last iteration called boundary extension which extends the selection of active function
+>genes. The idea behind this step is to include active function genes of the larger
+>phenotype into the selection which would not be considered if the lists of active
+>function nodes are merely interated in order. Just like the uniform crossover in
+>GA, our method produces two offspring.
+
+Výsledky:
+>Overall, our results indicate that the use of our proposed
+>methods can be beneficial for symbolic regression
+
+### Více chromozomová reprezentace (z2)
+>Walker et al. devised a multi-chromosome representation which could be applied 
+>to special classes of problems [124]. They looked at seven multiple output digital 
+>circuit problems and instead of allocating as many output genes as circuit outputs 
+>they divided the genotype into as many chromosomes as the number of outputs. For 
+>the problems chosen (all digital circuits) the ftness of each chromosomes could be 
+>assessed independently. The parent genotype in the 1 + lambda EA was constructed by 
+>choosing each of the fttest chromosomes. For all benchmarks this produced spectacularly better results than the one chromosome version. Indeed for one problem it 
+>was possible to evolve a solution approximately 392 faster than using a single chromosome with the same total number of nodes.
+
+Návrh na možnost pro vícechromozomové řešení u problémů kde nelze hodnotit chromozomy samostatně: (z2)
+>However, most computational problems do not have the property that multiple 
+>outputs can be evaluated for ftness independently. It would be interesting to investigate a multi-chromosome form of CGP in such cases. One way this could be done 
+>would be to allow multiple chromosomes each providing a single output and also 
+>having an additional “coordinator”chromosome which uses the outputs of the other 
+>chromosomes as inputs. Fitness would be determined from the coordinator chromosome only. This would allow parent genotypes to produce ofspring by crossover of 
+>non-coordinator chromosomes. Indeed, the coordinator chromosome would be free 
+>to utilise any or all of the non-coordinator chromosomes.
+
+### Cone-based crossover (z2)
+>In their work on new techniques for acquiring modules in modular CGP (see 
+>Sect. 3.2), Kaufmann and Platzner also investigated a cone-based crossover operator 
+>to be used with a genetic algorithm (rather than 1 + lambda-ES). This generates a recombined chromosome by transplanting a cone of a donor chromosome into a clone of a 
+>recipient chromosome. They investigated the utility of the crossover operator using 
+>various population sizes using a genetic algorithm. They found smaller population 
+>sizes worked best in the new approach but it only performed better than the original 
+>modular CGP technique on two of the six benchmark problems (two and three-bit 
+>multipliers).
+
+### sub-graph crossover (z2)
+>Kalkreuth et al. have recently investigated sub-graph crossover in CGP [35]. Subgraph crossover is like single-point crossover except that the active nodes both sides 
+>of the crossover point are preserved. The crossover point is always chosen so that 
+>it lies between nodes. This idea of sub-graph crossover is that it should reduce the 
+>disruption caused by single-point crossover in standard CGP and truly recombine 
+>meaningful sub-graphs. If after single-point crossover active genes would change 
+>then the connection genes on the right of the crossover point are randomly re-generated to preserve the active genes on the left of the crossover point. They used a 
+>standard genetic algorithm with population size 50 and tournament selection.
+
+### block crossover (z2)
+>Kalkreuth and Husa have recently proposed block crossover [32]. This is defned 
+>using the one-dimensional representation of CGP. First before carrying out block 
+>crossover blocks must be identifed in two parent genotypes. Blocks are groups of 
+>nodes that meet the following criteria: (1) The block contains a desired number of 
+>nodes, (2) All nodes in the block are directly linked through their inputs or outputs, 
+>(3) All nodes in the block are part of the genotype’s active path. Block crossover 
+>then randomly selects one block from each genotype and swaps them. The position 
+>of the nodes transferred as part of the block may change inside the new genotype. 
+>However, their mutual links are preserved and the function performed by the block 
+>stays the same. After block crossover, point mutation is applied. They conducted 
+>parameter sweeps with standard CGP (1 + lambda) versus genetic algorithms using block 
+>crossover on a suite of Boolean functions and symbolic regression problems. They 
+>found that there was no single set of crossover parameters that worked best over the 
+>problems. They also found that the best value of lambda varied with problem. Although it 
+>is possible for crossover operators to outperform the standard 1 + lambda strategy, if both 
+>methods have their parameters fne-tuned, the 1 + lambda strategy usually remains as the 
+>overall best strategy.
+
+***TODO*** Najít si zdroje ze kterých čerpal Miller co se týče daných algoritmů křížení, a přečíst si něco z nich
+
+## Dotazy:
+- Když cituji citace někoho jiného, je doporučeno citovat původní zdroj?
+- Je třeba dobrý nápad zkusit jako jeden z algoritmů to co navrhl Miller ve vícechromozomové reprezentaci? (asi ne)
+- Jaký je doporučený postup? přečíst si více věcí z více zdrojů? Nebo už teď napsat něco málo co vím (hlavně k CGP obecně) a potom psát průběžně zatímco budu číst?
+
+## K prozkoumání
+- Není mi zcela jasné spojení mezi evoluční strategií a případným křížením.
