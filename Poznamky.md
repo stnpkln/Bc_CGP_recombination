@@ -29,8 +29,9 @@ A:
 
 ## Zdroje ke zvážení:
 
-- [Positional Independence and Recombination in Cartesian Genetic Programming](https://link.springer.com/chapter/10.1007/11729976_32)
-- [A New Crossover Technique for Cartesian Genetic Programming](https://www.researchgate.net/publication/220742582_A_new_crossover_technique_for_Cartesian_genetic_programming)
+- [Positional Independence and Recombination in Cartesian Genetic Programming](https://link.springer.com/chapter/10.1007/11729976_32) z5
+- [A New Crossover Technique for Cartesian Genetic Programming](https://www.researchgate.net/publication/220742582_A_new_crossover_technique_for_Cartesian_genetic_programming) z6
+- [Genetic programming needs better benchmarks](https://dl.acm.org/doi/10.1145/2330163.2330273) z7
 
 ## Body ke kterým by se hodilo vyhledat informace a citace:
 
@@ -292,7 +293,7 @@ Návrh na možnost pro vícechromozomové řešení u problémů kde nelze hodno
 **_TODO_** Najít si zdroje ze kterých čerpal Miller co se týče daných algoritmů křížení, a přečíst si něco z nich
 
 ## 6. Problémy které lze řešit CGP
-
+- z7 je článek o benchmarcích v GP, určitě se vyplatí si o tom něco přečíst. Je z toho dost použito i v z3
 - Chci se nejspíš zaměřit na regresi
 
 ### Symbolická regrese (z1)
@@ -320,6 +321,17 @@ Návrh na možnost pro vícechromozomové řešení u problémů kde nelze hodno
   > set. The criterion for successfully finding a solution was that the absolute error of
   > each point was within 0.01 of the corresponding point in the output set.
 
+- z3 měli vyhodnocení regrese následovné:
+  >The fitness of the individuals
+  >was represented by a cost function value. The cost function was defined by the
+  >sum of the absolute difference between the real function values and the values
+  >of an evaluated individual. Let ![Alt text](image-1.png) be a training dataset of P random
+  >points and find(xp) the value of an evaluated individual and fref(xp) the true
+  >function value. Let
+  >![Alt text](image.png)
+  >be the cost function. When the difference of all absolute values becomes less
+  >than 0.01, the algorithm is classified as converged.
+
 Ve zkratce (dle mého chápání):
 
 - Regrese je jeden z typů problémů, na kterých se dají testovat evoluční algorytmy
@@ -331,10 +343,13 @@ Ve zkratce (dle mého chápání):
 
 - medián počtu evaluací (median number of evaluations) vs výpočetní náročnost (computational-effort)
   - **_TODO_** Jak přesně se zjiťují a co přesně znamenají? dohledat.
+  - Počet evaluací se bere jako počet fitness evaluací? možná.
 
 ### Mann–Whitney test
 ***TODO***
-- byl použit v z2 pro statistickou signifikanci, při porovnávání CGP a ECGP u symbolické regrese
+- byl použit v z1 pro statistickou signifikanci, při porovnávání CGP a ECGP u symbolické regrese
+- byl využit i u z3
+- Mann-whitney se nejspíš hodí, když nemůžeme zaručit normální rozložení našich vzorků.(z2) (proto se nejspíš použilo v obou případech)
 - vypadá celkem složitě... ale zkoušku z Pravděpodobnosti a statistiky jsem napsal na 77/80 bodů, takže se to určitě zvládne...
 - [tady](https://www.karlin.mff.cuni.cz/~zvara/geograf/0708/geo4Predn09.pdf) to vypadá že bych si o tom mohl něco pěkného přečíst
 
