@@ -2,22 +2,18 @@
 
 ## Dotazy:
 
-Q: Když cituji citace někoho jiného, je doporučeno citovat původní zdroj?
+Q: Když cituji citace někoho jiného, je doporučeno citovat původní zdroj? <br>
 A: Je lepší citovat přímo původní zdroj, záleží samozřejmě na kontextu
 
-Q: Jaký je doporučený postup? přečíst si více věcí z více zdrojů? Nebo už teď napsat něco málo co vím (hlavně k CGP obecně) a potom psát průběžně zatímco budu číst?
+Q: Jaký je doporučený postup? přečíst si více věcí z více zdrojů? Nebo už teď napsat něco málo co vím (hlavně k CGP obecně) a potom psát průběžně zatímco budu číst? <br>
 A: Ještě není třeba psát, u bakalářky se nemusí psát už v zimním semestru.
 
-Q: Je třeba dobrý nápad zkusit jako jeden z algoritmů to co navrhl Miller ve vícechromozomové reprezentaci?
+Q: **Je dobrý nápad zkusit jako jeden z algoritmů to co navrhl Miller ve vícechromozomové reprezentaci?**<br>
 A:
 
 ## K prozkoumání
 
 - spojení mezi evoluční strategií a případným křížením.
-- Metody vyhodnocování CGP
-  - Jaké úlohy se používají
-  - Jak se vyhodnocuje
-  - statistická hodnota výsledku?
 - Vymyslet algorytmy :)
 
 ## Zdroje přečtené:
@@ -26,12 +22,12 @@ A:
 - [Cartesian genetic programming: its status and future](https://link.springer.com/article/10.1007/s10710-019-09360-6) (z2)
 - [Towards Discrete Phenotypic Recombination in Cartesian Genetic Programming](https://link.springer.com/chapter/10.1007/978-3-031-14721-0_5) (z3)
 - [A Comparative Study on Crossover in Cartesian Genetic Programming](https://link.springer.com/chapter/10.1007/978-3-319-77553-1_13) (z4)
+- [Genetic programming needs better benchmarks](https://dl.acm.org/doi/10.1145/2330163.2330273) (z7)
 
 ## Zdroje ke zvážení:
 
 - [Positional Independence and Recombination in Cartesian Genetic Programming](https://link.springer.com/chapter/10.1007/11729976_32) z5
 - [A New Crossover Technique for Cartesian Genetic Programming](https://www.researchgate.net/publication/220742582_A_new_crossover_technique_for_Cartesian_genetic_programming) z6
-- [Genetic programming needs better benchmarks](https://dl.acm.org/doi/10.1145/2330163.2330273) z7
 
 ## Body ke kterým by se hodilo vyhledat informace a citace:
 
@@ -293,7 +289,16 @@ Návrh na možnost pro vícechromozomové řešení u problémů kde nelze hodno
 **_TODO_** Najít si zdroje ze kterých čerpal Miller co se týče daných algoritmů křížení, a přečíst si něco z nich
 
 ## 6. Problémy které lze řešit CGP
-- z7 je článek o benchmarcích v GP, určitě se vyplatí si o tom něco přečíst. Je z toho dost použito i v z3
+
+- (z7) Obecné třídy pro benchmarky v GP:
+
+  - Regrese
+  - Klasifikace
+  - Binární funkce
+  - Prediktivní modeling
+  - hledání cesty
+  - ...
+
 - Chci se nejspíš zaměřit na regresi
 
 ### Symbolická regrese (z1)
@@ -314,6 +319,7 @@ Návrh na možnost pro vícechromozomové řešení u problémů kde nelze hodno
   > log and exponential are used in the function set when the symbolic regression problem requires it [11].
 
 - Jak se vyhodnocuje?
+
   > The fitness function used to distinguish between individuals in the population
   > was the absolute error of the function over all the points in the input set. This is
   > the sum of the absolute differences between the calculated output of each individual
@@ -322,15 +328,15 @@ Návrh na možnost pro vícechromozomové řešení u problémů kde nelze hodno
   > each point was within 0.01 of the corresponding point in the output set.
 
 - z3 měli vyhodnocení regrese následovné:
-  >The fitness of the individuals
-  >was represented by a cost function value. The cost function was defined by the
-  >sum of the absolute difference between the real function values and the values
-  >of an evaluated individual. Let ![Alt text](image-1.png) be a training dataset of P random
-  >points and find(xp) the value of an evaluated individual and fref(xp) the true
-  >function value. Let
-  >![Alt text](image.png)
-  >be the cost function. When the difference of all absolute values becomes less
-  >than 0.01, the algorithm is classified as converged.
+  > The fitness of the individuals
+  > was represented by a cost function value. The cost function was defined by the
+  > sum of the absolute difference between the real function values and the values
+  > of an evaluated individual. Let ![Alt text](image-1.png) be a training dataset of P random
+  > points and find(xp) the value of an evaluated individual and fref(xp) the true
+  > function value. Let
+  > ![Alt text](image.png)
+  > be the cost function. When the difference of all absolute values becomes less
+  > than 0.01, the algorithm is classified as converged.
 
 Ve zkratce (dle mého chápání):
 
@@ -345,12 +351,32 @@ Ve zkratce (dle mého chápání):
   - **_TODO_** Jak přesně se zjiťují a co přesně znamenají? dohledat.
   - Počet evaluací se bere jako počet fitness evaluací? možná.
 
-### Mann–Whitney test
-***TODO***
+### Mann–Whitney U test
+
 - byl použit v z1 pro statistickou signifikanci, při porovnávání CGP a ECGP u symbolické regrese
 - byl využit i u z3
-- Mann-whitney se nejspíš hodí, když nemůžeme zaručit normální rozložení našich vzorků.(z2) (proto se nejspíš použilo v obou případech)
-- vypadá celkem složitě... ale zkoušku z Pravděpodobnosti a statistiky jsem napsal na 77/80 bodů, takže se to určitě zvládne...
-- [tady](https://www.karlin.mff.cuni.cz/~zvara/geograf/0708/geo4Predn09.pdf) to vypadá že bych si o tom mohl něco pěkného přečíst
+- Mann-whitney se hodí, když nemůžeme zaručit normální rozložení našich vzorků.(z2) (proto se nejspíš použilo v obou případech)
+- Používá tzv "rank sum difference" = v obou skupinach (dohromady) ohodnotíme seřadíme položky od 1 do ..., podle hodnoty. Sečteme v každé skupině ranky všech položek, které do ní patří. Dostaneme <em>T1</em> a <em>T2</em>
+- Dále jde přes vzorce vypočítat <em>U</em> hodnoty, <em>z</em> hodnotu a <em>p-hodnotu</em>
+- na základě p hodnoty lze odhadnout, jak je náš experiment signifikantní. Obecně se bere, že p-hodnota by měla být alespoň 0,05
 
+- [Krátké video kde vysvětlují základ](https://www.youtube.com/watch?v=LcxB56PzylA)
+- [Prezentace University Karlovy](https://www.karlin.mff.cuni.cz/~zvara/geograf/0708/geo4Predn09.pdf)
 
+# Návrhy algorytmů
+
+## Vícechromozomové řešení s koordinátorem
+
+- zmíněno v z2
+- Nevím jestli by bylo bráno jako mé řešení podle zadání, protože jsem ho technicky "nevymyslel"
+- Neviděl jsem návrh ale nikde zpracovaný, tak by to možná nebyl špatný nápad
+- je to i celkem blízko k představě kterou jsem měl.
+- **TODO** zeptat se vedoucího na názor
+
+> However, most computational problems do not have the property that multiple
+> outputs can be evaluated for ftness independently. It would be interesting to investigate a multi-chromosome form of CGP in such cases. One way this could be done
+> would be to allow multiple chromosomes each providing a single output and also
+> having an additional “coordinator”chromosome which uses the outputs of the other
+> chromosomes as inputs. Fitness would be determined from the coordinator chromosome only. This would allow parent genotypes to produce ofspring by crossover of
+> non-coordinator chromosomes. Indeed, the coordinator chromosome would be free
+> to utilise any or all of the non-coordinator chromosomes.
