@@ -9,7 +9,7 @@ Q: Jaký je doporučený postup? přečíst si více věcí z více zdrojů? Neb
 A: Ještě není třeba psát, u bakalářky se nemusí psát už v zimním semestru.
 
 Q: **Je dobrý nápad zkusit jako jeden z algoritmů to co navrhl Miller ve vícechromozomové reprezentaci?**<br>
-A:
+A: Je to něco co bych si mohl vzít navíc, lepší by ale bylo, kdyby ty dva algorytmy byly mé vlastní
 
 ## K prozkoumání
 
@@ -380,3 +380,34 @@ Ve zkratce (dle mého chápání):
 > chromosomes as inputs. Fitness would be determined from the coordinator chromosome only. This would allow parent genotypes to produce ofspring by crossover of
 > non-coordinator chromosomes. Indeed, the coordinator chromosome would be free
 > to utilise any or all of the non-coordinator chromosomes.
+
+## Implantace aktivních genů do pasivních
+
+Ve dvou jedincích se zjišťuje, zda mají nějaký aktivní prvek na stejné pozici, jako nějaký pasivní druhého jedince. Bude se provádět bodové křížení
+Pokud ano:
+
+### a) fenotypicka moznost
+
+Operace se pasivního genu jedince 1 se nahradí operací aktivního genu jedince 2.
+Případně se upraví počet vstupů tak, aby odpovídal nové operaci.
+
+### b) Bodové křížení
+
+Vymění se operace spolu se vstupy (tedy celý gen) - nejspíše dává vštší smysl, jelikož už tak budou pasivní geny hrát malou roli
+
+## Fenotypická výměna podgrafů proměnlivé velikosti
+
+Při průchodu jedinci, najdu všechny indexy, kde mají oba jedinci aktivní gen a jedno z nich vyberu.
+Následně:
+
+Prohodím operace genů, pokud nesedí počet vstupů, provedu případné úpravy.
+Vezmu minimum z počtu vstupů obou jedinců, a s pravděpodobností P se rozhodu, že půjdu po 1. vstupech těchto genů dále. (v podstatě takové zanořování do hloubky).
+Opět prohodím operace obou genů, a provedu to samé. Pokud narazím na celkový vstup genotypu, tak již nepostupuju dále.
+
+- Varianta a: Rozhodujeme se s konstantní pravděpodobností, třeba 1/2
+- Varianta b: Rozhoduje me se s postupně snižující se pravděpodobností, třeba podle hloubky zanoření (tedy koren vybirame s P = 1 prvního genu je P = 1/2 ze pujdeme dal, u dalsich je to 1/3...)
+- Varianta c: Budeme se zanorovat dokud to lze, tedy s P = 1
+
+Pozn. AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA teď když jsem se koukl na to jake jsou algorytmy, tak je to dost podobné výsledku Blokového křížení. Rozdílem je jenom proměnné délka a šířka... Takže Block crossover je podmnožina tohoto algorytmu, pokud by byla pevně daná hloubka a hledalo by se do šířky
+
+- Nevýhoda: implementace algorytmu s pravděpodobností může žrát více výpočetního času, než je jeho přínos...
