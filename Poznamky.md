@@ -414,6 +414,6 @@ Pozn.: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA teď když jsem se koukl na to jake jsou
 
 Pozn. 2: Jeste jeden rozdíl, u mého algorytmu se začíná na stejném indexu, u Block Crossover se může být kořen na různé pozici. 
 
-- Nevýhoda: implementace algorytmu s pravděpodobností může žrát více výpočetního času, než je jeho přínos...
+- Nevýhoda: implementace algorytmu s pravděpodobností může žrát více výpočetního času, než je jeho přínos... i kdyz mozna ani ne, kdyz se stejne nahodne vybiraji mista krizeni apod.
 
 ![Alt text](Algorithm2.svg)
