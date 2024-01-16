@@ -395,6 +395,8 @@ Případně se upraví počet vstupů tak, aby odpovídal nové operaci.
 
 Vymění se operace spolu se vstupy (tedy celý gen) - nejspíše dává vštší smysl, jelikož už tak budou pasivní geny hrát malou roli
 
+![Alt text](Algorithm1.svg)
+
 ## Fenotypická výměna podgrafů proměnlivé velikosti
 
 Při průchodu jedinci, najdu všechny indexy, kde mají oba jedinci aktivní gen a jedno z nich vyberu.
@@ -408,6 +410,10 @@ Opět prohodím operace obou genů, a provedu to samé. Pokud narazím na celkov
 - Varianta b: Rozhoduje me se s postupně snižující se pravděpodobností, třeba podle hloubky zanoření (tedy koren vybirame s P = 1 prvního genu je P = 1/2 ze pujdeme dal, u dalsich je to 1/3...)
 - Varianta c: Budeme se zanorovat dokud to lze, tedy s P = 1
 
-Pozn. AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA teď když jsem se koukl na to jake jsou algorytmy, tak je to dost podobné výsledku Blokového křížení. Rozdílem je jenom proměnné délka a šířka... Takže Block crossover je podmnožina tohoto algorytmu, pokud by byla pevně daná hloubka a hledalo by se do šířky
+Pozn.: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA teď když jsem se koukl na to jake jsou algorytmy, tak je to dost podobné výsledku Blokového křížení. Rozdílem je jenom proměnné délka a šířka... Takže Block crossover je podmnožina tohoto algorytmu, pokud by byla pevně daná hloubka a hledalo by se do šířky.
+
+Pozn. 2: Jeste jeden rozdíl, u mého algorytmu se začíná na stejném indexu, u Block Crossover se může být kořen na různé pozici. 
 
 - Nevýhoda: implementace algorytmu s pravděpodobností může žrát více výpočetního času, než je jeho přínos...
+
+![Alt text](Algorithm2.svg)
