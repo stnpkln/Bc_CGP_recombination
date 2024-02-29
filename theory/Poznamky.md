@@ -395,6 +395,9 @@ Případně se upraví počet vstupů tak, aby odpovídal nové operaci.
 
 Vymění se operace spolu se vstupy (tedy celý gen) - nejspíše dává vštší smysl, jelikož už tak budou pasivní geny hrát malou roli
 
+***TODO:chyba v obrazku, uzel ctyri je pasivni, ne aktivni!!! opravit nez se to da do bakalarky... mozna je to i u druheho obrazku***
+
+***TODO:chyba v obrazku, nesedi genotyp (zapsany cisly) pro treti gen rodice jedna, vstupy jsou 1, 1 a ne 0, 0 (zkontroluj radsi vse)***
 ![Alt text](Algorithm1.svg)
 
 ## Fenotypická výměna podgrafů proměnlivé velikosti
