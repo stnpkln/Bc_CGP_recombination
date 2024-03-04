@@ -63,7 +63,15 @@ class TestPopulation(unittest.TestCase):
         ncols = 10
         nrows = 10
         pupulation_size = 5
-        p = Population(pupulation_size, nrows, ncols)
+        p = Population(pupulation_size, ncols, nrows)
+
+        self.assertEqual(p.ncolumns, ncols, f"ncolumns should be {ncols}")
+        self.assertEqual(p.nrows, nrows, f"nrows should be {nrows}")
+        self.assertEqual(len(p.population), pupulation_size, f"population should have {pupulation_size} genomes")
+
+        ncols = 50
+        nrows = 1
+        p = Population(pupulation_size, ncols, nrows)
 
         self.assertEqual(p.ncolumns, ncols, f"ncolumns should be {ncols}")
         self.assertEqual(p.nrows, nrows, f"nrows should be {nrows}")

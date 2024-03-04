@@ -26,3 +26,6 @@ Bakalářská práce na téma "Využití operátoru křížení v kartézském g
 
 Obhajoba - 31.1. 10:50 (někde v systému VUT)
 https://www.overleaf.com/
+
+# testování
+- v /src spustit `python3 -m unittest`

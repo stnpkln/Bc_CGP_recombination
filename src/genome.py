@@ -1,70 +1,26 @@
 from population import Population
-from constants.operations import operations, op_inputs
+from constants.operations import operations, op_inputs, op_functions
 from typing import List
+import numpy as np
+import timeit
 
-# PseudoCode for Nodes To Process (CGP Miller)
-# 1: NodesToProcess(G,NP) // return the number of nodes to process
-# 2: for all i such that 0 ≤ i < M do
-# 3: 	NU[i] = FALSE
-# 4: end for
-# 5: for all i such that Lg −no ≤ i < Lg do
-# 6:	NU[G[i]] ← T RUE
-# 7: end for
-# 8: for all i such that M −1 ≥ i ≥ ni do // Find active nodes
-# 9: 	if NU[i] ← T RUE then
-# 10: 		index ← nn(i−ni)
-# 11: 		for all j such that 0 ≤ j < nn do // store node genes in NG
-# 12: 			NG[ j] ← G[index+ j]
-# 13: 		end for
-# 14: 		for all j such that 0 ≤ j < Arity(NG[nn −1]) do
-# 15: 			NU[NG[ j]] ← T RUE
-# 16: 		end for
-# 17: 	end if
-# 18: end for
-# 19: nu = 0
-# 20: for all j such that ni ≤ j < M do // store active node addresses in NP
-# 21: 	if NU[ j] = T RUE then
-# 22: 		NP[nu] ← j
-# 23: 		nu ← nu +1
-# 24: 	end if
-# 25: end for
-# 26: return nu
 
-# PseudoCode for decoding genotype (CGP Miller)
-# 1: DecodeCGP(G,DIN,O,nu,NP,item)
-# 2: for all i such that 0 ≤ i < ni do
-# 3: 	o[i] ← DIN[item]
-# 4: end for
-# 5: for all j such that 0 ≤ j < nu do
-# 6: 	n ← NP[ j]−ni
-# 7: 	g ← nnn
-# 8: 	for all i such that 0 ≤ i < nn −1 do // store data needed by a node
-# 9: 		in[i] ← o[G[g+i]]
-# 10: 	end for
-# 11: 	f = G[g+nn −1] // get function gene of node
-# 12: 	o[n+ni] = NF(in, f) // calculate output of node
-# 13: end for
-# 14: for all j such that 0 ≤ j < no do
-# 15: 	O[ j] ← o[G[Lg −no + j]]
-# 16: end for
-
-# PseudoCode for evaluating fitness (CGP Miller)
-# 1: FitnessCGP(G)
-# 2: nu ← NodesToProcess(G,NP)
-# 3: f it ← 0
-# 4: for all i such that 0 ≤ i < Nf c do
-# 5: 	DecodeCGP(G,DIN,O,nu,NP,item)
-# 6: 	fi = EvaluateCGP(O,DOUT,i)
-# 7: 	f it ← f it + fi
-# 8: end for
-
-# beru ze vstupni geny maji -1 a vystupni geny maji -2
 def get_active_gene_indexes(output_gene_indexes: List[int], genome: List[List[int]]):
+    '''[summary]
+    Returns indexes of active genes in genome
+    ### Parameters
+    1. output_gene_indexes: List[int]
+        - list of indexes of output genes
+    2. genome: List[List[int]]
+        - genome to search active genes in
+    
+    ### Returns
+    List[int]
+        - list of indexes of active genes in genome
+    '''
+
     active_genes_indexes = []
-    added_to_active_flag = [False] * len(genome)
-    for output_gene_index in output_gene_indexes:
-        active_genes_indexes.append(output_gene_index)
-        added_to_active_flag[output_gene_index] = True
+    added_to_active_flag = [False] * len(genome) # flag for each gene if it was added to active genes
 
     found_new_gene = True
     gene_indexes_to_search = output_gene_indexes.copy()
@@ -74,29 +30,88 @@ def get_active_gene_indexes(output_gene_indexes: List[int], genome: List[List[in
             gene = genome[gene_index_to_search]
             gene_operation = gene[0]
 
-            # vstupni gen
+            # in case of input gene, skip it
             if (gene_operation == -1):
                 continue
 
-            # vystupni gen
+            # add the gene we are working with to active genes
+            active_genes_indexes.append(gene_index_to_search)
+
+            # in case of output gene, save it to active genes, and continue
             if (gene_operation == -2):
                 input_gene_index = gene[1]
                 if (not added_to_active_flag[input_gene_index]):
-                    active_genes_indexes.append(input_gene_index)
+                    # mark the input of this gene as active, and add it to active genes
                     added_to_active_flag[input_gene_index] = True
                     new_indexes_to_search.append(input_gene_index)
                 continue
 
-            # funkcni geny
-            for i in range(1, 1 + op_inputs[operations[gene_operation]]):
-                input_gene_index = gene[i]
+            # function genes
+            for i in range(1, 1 + op_inputs[operations[gene_operation]]): # for each input that the operation of this gene has
+                input_gene_index = gene[i] # in case of output gene, use only the first input
                 if (not added_to_active_flag[input_gene_index]):
-                    active_genes_indexes.append(input_gene_index)
+                    # mark the input of this gene as active, and add it to genes to search next
                     added_to_active_flag[input_gene_index] = True
                     new_indexes_to_search.append(input_gene_index)
 
-        found_new_gene = len(new_indexes_to_search) != 0
-        gene_indexes_to_search = new_indexes_to_search
+        found_new_gene = len(new_indexes_to_search) != 0 # if there are no new genes to search, stop the loop
+        gene_indexes_to_search = new_indexes_to_search # reassign the genes to search
 
     return active_genes_indexes
+
+def genome_output(genome: List[List[int]], input_values: List[List[int]]):
+    '''[summary]
+    Returns output of genome for given input values
+    ### Parameters
+    1. genome: List[List[int]]
+        - genome to calculate output for
+    2. input_values: List[List[int]]
+        - list of input values to calculate output for
+        - each list of input values is one input
+
+    ### Returns
+    np.ndarray
+        - output of genome for given input values
+        - works with only one output gene (TODO if necessary)
+    '''
+    output_gene_indexes = [i for i in range(len(genome)) if genome[i][0] == -2] # get indexes of output genes, may need to be changed, TODO
+    active_gene_indexes = get_active_gene_indexes(output_gene_indexes, genome)
+    n_input_nodes = len(input_values) # gen number of input nodes, base on parameter input_values
+    nrows = len(active_gene_indexes) + n_input_nodes # number of rows in matrix
+    ncols = len(input_values[0]) # number of columns in matrix
+
+    # mapping from gene index to matrix index, so we can use gene indexes to access the matrix, and the matrix can be only as big as the number of active nodes
+    gene_to_matrix_mapping = {key: value for key, value in zip(active_gene_indexes[::-1], range(n_input_nodes, nrows))}
+
+    matrix = np.full((nrows, ncols), 0)
+
+    # fill the matrix with input values
+    for i in range(n_input_nodes):
+        matrix[i] = input_values[i]
+        gene_to_matrix_mapping[i] = i
+
+    # fill the matrix with output of genes
+    for i in range(len(active_gene_indexes)):
+        for gene_index in active_gene_indexes:
+            gene = genome[gene_index]
+            gene_operation = gene[0]
+
+            # in case of input gene, skip it
+            if (gene_operation == -1):
+                continue
+
+            # in case of output gene, copy the input gene output
+            if (gene_operation == -2):
+                last_function_gene_index = gene[1]
+                matrix[gene_to_matrix_mapping[gene_index]] = matrix[gene_to_matrix_mapping[last_function_gene_index]]
+                continue
+
+            # function genes
+            # TODO, so far works only with operations that have two inputs
+            first_input = matrix[gene_to_matrix_mapping[gene[1]]]
+            second_input = matrix[gene_to_matrix_mapping[gene[2]]]
+            matrix[gene_to_matrix_mapping[gene_index]] = op_functions[operations[gene_operation]](first_input, second_input) # calculate the output of the gene
+
+    # return the last column (output column) of the matrix
+    return matrix[-1]
 
