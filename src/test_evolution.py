@@ -64,7 +64,7 @@ class TestGenome(unittest.TestCase):
         # todo maybe some test for children?
             
     def test_evolve(self):
-        func = lambda x: x + x ** x
+        func = lambda x: x * x + x * x
         input = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]
         wanted_output = []
         for x in input[0]:
@@ -78,8 +78,6 @@ class TestGenome(unittest.TestCase):
                max_generations=10000)
         print(f"fitness: {fitness}, generation: {generation}")
         print(f"solution: {solution}")
-
-
 
 if __name__ == '__main__':
     unittest.main()
