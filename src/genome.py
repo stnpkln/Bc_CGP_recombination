@@ -2,8 +2,11 @@ from population import Population
 from constants.operations import operations, op_inputs, op_functions
 from typing import List
 import numpy as np
-import timeit
+from sklearn.metrics import mean_squared_error
+from copy import deepcopy
+from math import floor
 
+mutation_rate = 0.1
 
 def get_active_gene_indexes(output_gene_indexes: List[int], genome: List[List[int]]):
     '''[summary]
@@ -114,4 +117,73 @@ def genome_output(genome: List[List[int]], input_values: List[List[int]]):
 
     # return the last column (output column) of the matrix
     return matrix[-1]
+
+# TODO predelat input na ndArray
+def evaluate_fitness(genome: List[List[int]], input: List[List[int]], wanted_output: List[int]):
+    output = genome_output(genome, input)
+    return mean_squared_error(wanted_output, output)
+
+def mutate_individual(target: List[List[int]], ncolumns, nrows):
+    individual = deepcopy(target)
+    genome_length = len(individual)
+    n_of_genes_to_mutate = floor(genome_length * mutation_rate + 1)
+
+    for i in range(n_of_genes_to_mutate):
+        success = False
+        mutated_gene = []
+        while(not success):
+            gene_index_to_mutate = np.random.randint(genome_length)
+            gene = individual[gene_index_to_mutate]
+            mutated_gene, success = mutate_gene(gene, gene_index_to_mutate, ncolumns, nrows)
+
+        individual[gene_index_to_mutate] = mutated_gene
+
+    return individual
+
+def mutate_gene(gene: List[int], gene_index, ncolumns, nrows):
+    allele_to_mutate = np.random.randint(0, len(gene))
+
+    if gene[allele_to_mutate] == -1 or gene[allele_to_mutate] == -2:
+        return gene, False
+
+    mutation_to_be_done = True
+    while(mutation_to_be_done):
+        original = gene[allele_to_mutate]
+
+        if allele_to_mutate == 0:
+            mutated = np.random.randint(0, len(operations))
+        else:
+            last_possible_input_index = get_last_possible_input_index(ncolumns, nrows, gene_index)
+            if (last_possible_input_index <= 0):
+                raise ValueError(f"last_possible_input_index is: {last_possible_input_index}, gene_index is: {gene_index}, ncolumns is: {ncolumns}, nrows is: {nrows}")
+            elif (last_possible_input_index == 1):
+                return gene, False # impossible to mutate input, if there is only one possible input available
+
+            mutated = np.random.randint(0, last_possible_input_index)
+        
+        if original != mutated:
+            gene[allele_to_mutate] = mutated
+            mutation_to_be_done = False
+
+    return gene, True
+
+def get_last_possible_input_index(ncolumns: int, nrows: int, gene_index: int):
+    if (gene_index < 0 or ncolumns < 1 or nrows < 1):
+        raise ValueError("gene_index, ncolumns and nrows must be positive integers")
+
+    column_index = get_genome_column(nrows, gene_index)
+    columns_before = column_index
+    return columns_before * nrows
+
+def get_genome_column(nrows, index):
+    if (index < 0 or nrows < 1):
+        raise ValueError("index and nrows must be positive integers")
+
+    return index // nrows
+
+def get_number_of_gene_inputs(gene: List[int]):
+    if len(gene) == 0:
+        raise ValueError("gene must have at least one element")
+
+    return op_inputs[operations[gene[0]]]
 

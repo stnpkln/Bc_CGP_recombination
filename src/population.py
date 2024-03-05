@@ -6,6 +6,8 @@ class Population:
         self.nrows = nrows
         self.ncolumns = ncolumns
         self.population = self.get_starting_popultation(population_size)
+        self.parent_index = 0
+        self.children_indexes = [i for i in range(1, population_size)]
 
     def get_starting_popultation(self, population_size):
         population = []
@@ -48,11 +50,33 @@ class Population:
     def get_population(self):
         return self.population
 
-    def get_genome(self, index):
+    def get_individual(self, index):
         return self.population[index]
+    
+    def set_individual(self, index, individual):
+        self.population[index] = individual
     
     def get_first_function_node_index(self):
         return self.nrows
     
     def get_last_function_node_index(self):
         return self.ncolumns * self.nrows - 1
+    
+    def get_parent(self):
+        return self.population[self.parent_index]
+    
+    def set_parent(self, new_parent):
+        self.population[self.parent_index] = new_parent
+    
+    def get_children(self):
+        children = []
+        for child_index in self.children_indexes:
+            children.append(self.population[child_index])
+        return children
+
+    def set_children(self, new_children):
+        if len(new_children) != len(self.children_indexes):
+            raise(f"Number of new_children is different than required, number of new_children:{len(new_children)}, required: {len(self.children_indexes)}")
+        for i in range(len(new_children)):
+            self.population[self.children_indexes[i]] = new_children[i]
+        
