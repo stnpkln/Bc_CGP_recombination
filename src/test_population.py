@@ -5,12 +5,10 @@ from constants.operations import operations, op_inputs
 class TestPopulation(unittest.TestCase):
 
     def test_get_random_gene(self):
-        #prazdna populace
-        p = Population(0, 0, 0)
-        gene = p.get_random_gene(0, 0, [])
-        self.assertEqual(gene, [-1, -1, -1], "Should be [-1, -1, -1]")
+        # empty population
+        self.assertRaises(ValueError, p = Population(0, 0, 0))
 
-        #vstupy
+        # inputs
         p = Population(5, 10, 1)
         gene = p.get_random_gene(0, 0, [])
         self.assertEqual(gene, [-1, -1, -1], "Should be [-1, -1, -1]")

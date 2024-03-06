@@ -62,9 +62,9 @@ class TestGenome(unittest.TestCase):
             self.assertListEqual(parent[i], test_genome_best_parent[i], "parent should not be changed")
 
         # todo maybe some test for children?
-            
+
     def test_evolve(self):
-        func = lambda x: x * x + x * x
+        func = lambda x: x + x
         input = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]
         wanted_output = []
         for x in input[0]:
