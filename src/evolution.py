@@ -1,8 +1,9 @@
 from typing import List
 from population import Population
 from genome import evaluate_fitness, mutate_individual
+import numpy as np
 
-def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: List[List[int]], wanted_output: List[int], acceptable_boundary: int, max_generations: int) -> tuple[List[List[int]], float, int]:
+def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: np.ndarray[np.ndarray[int | float]], wanted_output: np.ndarray[float | int], acceptable_boundary: int, max_generations: int) -> tuple[List[List[int]], float, int]:
     '''[summary]
     Runs the 1 + lambda evolutionary algorithm to find a genome that solves the given problem.
     ### Parameters
@@ -15,10 +16,10 @@ def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: List[L
     3. nrows: int
         - number of rows in the genome
         - must be >= 1
-    4. input_matrix: List[List[int]]
+    4. input_matrix: np.ndarray[np.ndarray[int | float]]
         - input_matrix data for the function
         - must not be empty
-    5. wanted_output: List[int]
+    5. wanted_output: np.ndarray[float | int]
         - expected output of the function
         - must not be empty
     6. acceptable_boundary: float
@@ -59,9 +60,9 @@ def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: List[L
 
     for generation in range(max_generations):
         new_parent, fitness = get_fittest_individual(population, input_matrix, wanted_output)
-        
+
         # found an acceptable solution before max_generations was reached
-        if fitness < acceptable_boundary:
+        if fitness <= acceptable_boundary:
             break
 
         generate_new_population(new_parent, population)
@@ -89,15 +90,15 @@ def generate_new_population(new_parent: List[List[int]], population: Population)
     population.set_children(new_children)
     population.set_parent(new_parent)
 
-def get_fittest_individual(population: Population, input_matrix: List[List[int]], wanted_output: List[int]) -> tuple[List[List[int]], float]:
+def get_fittest_individual(population: Population, input_matrix: np.ndarray[np.ndarray[int | float]], wanted_output: np.ndarray[float | int]) -> tuple[List[List[int]], float]:
     '''[summary]
     Returns the fittest individual from the given population.
     ### Parameters
     1. population: Population
         - population to get the fittest individual from
-    2. input_matrix: List[List[int]]
+    2. input_matrix: np.ndarray[np.ndarray[int | float]]
         - input_matrix data for the function
-    3. wanted_output: List[int]
+    3. wanted_output: np.ndarray[float | int]
         - expected output of the function
     ### Returns
     1. List[List[int]]

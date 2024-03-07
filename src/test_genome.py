@@ -41,21 +41,25 @@ class TestGenome(unittest.TestCase):
         self.assertEqual(set(active_genes), set([9, 8, 6, 5, 2, 1]), f"active genes are: {active_genes}, but they sould be 9, 8, 6, 5, 2, 1, 0")
 
     def test_genome_output(self):
-        output = genome_output(test_genome, [[1] * 10])
-        self.assertListEqual(np.ndarray.tolist(output), [64] * 10, "incorrect genome output")
+        output = genome_output(test_genome, np.array([np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])]))
+        self.assertListEqual(output.tolist(), [64] * 10, "incorrect genome output")
 
-        output = genome_output(test_genome, [[0, 1, 2, 3, 4, 4, 3, 2, 1, 0]])
-        self.assertListEqual(np.ndarray.tolist(output), [0, 64, 9216, 186624, 1638400, 1638400, 186624, 9216, 64, 0], "incorrect genome output with different input values")
+        output = genome_output(test_genome, np.array([np.array([0, 1, 2, 3, 4, 4, 3, 2, 1, 0])]))
+        self.assertListEqual(output.tolist(), [0, 64, 9216, 186624, 1638400, 1638400, 186624, 9216, 64, 0], "incorrect genome output with different input values")
         
-        output = genome_output(test_genome_small, [[1, 1, 1]])
-        self.assertListEqual(np.ndarray.tolist(output), [2, 2, 2], "incorrect genome output with small genome")
+        output = genome_output(test_genome_small, np.array([np.array([1, 1, 1])]))
+        self.assertListEqual(output.tolist(), [2, 2, 2], "incorrect genome output with small genome")
 
-        output = genome_output(test_genome_small_multiple_inputs, [[1, 1, 1], [2, 2, 2]])
-        self.assertListEqual(np.ndarray.tolist(output), [6, 6, 6], "incorrect genome output in genome with more inputs")
+        output = genome_output(test_genome_small_multiple_inputs, np.array([np.array([1, 1, 1]), np.array([2, 2, 2])]))
+        self.assertListEqual(output.tolist(), [6, 6, 6], "incorrect genome output in genome with more inputs")
+
+        # floats
+        output = genome_output(test_genome_small, np.array([np.array([0.5, 0.5, 0.5])]))
+        self.assertListEqual(output.tolist(), [0.5, 0.5, 0.5], "incorrect genome output with small genome and floats")
     
     def test_evaluate_fitness(self):
-        genome_input = [[0, 1, 2, 3, 4, 4, 3, 2, 1, 0]]
-        wanted_output = [0, 64, 9216, 186624, 1638400, 1638400, 186624, 9216, 64, 0]
+        genome_input = np.array([np.array([0, 1, 2, 3, 4, 4, 3, 2, 1, 0])])
+        wanted_output = np.array([0, 64, 9216, 186624, 1638400, 1638400, 186624, 9216, 64, 0])
 
         self.assertEqual(evaluate_fitness(test_genome, genome_input, wanted_output), 0)
 

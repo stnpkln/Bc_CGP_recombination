@@ -62,12 +62,12 @@ def get_active_gene_indexes(genome: List[List[int]], output_gene_indexes: List[i
 
     return active_genes_indexes
 
-def genome_output(genome: List[List[int]], input_matrix: List[List[int]]) -> np.ndarray:
+def genome_output(genome: List[List[int]], input_matrix: np.ndarray[np.ndarray[int | float]]) -> np.ndarray[float | int]:
     '''[summary]
     ### Parameters
     1. genome: List[List[int]]
         - genome to calculate output for
-    2. input_matrix: List[List[int]]
+    2. input_matrix: np.ndarray[np.ndarray[int | float]]
         - list of input values to calculate output for
         - each list of input values is one input
 
@@ -85,7 +85,7 @@ def genome_output(genome: List[List[int]], input_matrix: List[List[int]]) -> np.
     # mapping from gene index to matrix index, so we can use gene indexes to access the matrix, and the matrix can be only as big as the number of active nodes
     gene_to_matrix_mapping = {key: value for key, value in zip(active_gene_indexes[::-1], range(n_input_nodes, nrows))}
 
-    matrix = np.full((nrows, ncols), 0)
+    matrix = np.full((nrows, ncols), 0.0)
 
     # fill the matrix with input values
     for i in range(n_input_nodes):
@@ -117,26 +117,24 @@ def genome_output(genome: List[List[int]], input_matrix: List[List[int]]) -> np.
     # return the last column (output column) of the matrix
     return matrix[-1]
 
-def evaluate_fitness(genome: List[List[int]], input: List[List[int]], wanted_output: List[int]) -> float:
+def evaluate_fitness(genome: List[List[int]], input_matrix: np.ndarray[np.ndarray[int | float]], wanted_output: np.ndarray[float | int]) -> float:
     '''[summary]
     Returns fitness of genome for given input values and wanted output.
     Fitness value is calculated as mean squared error between wanted output and output of genome for given input values.
     ### Parameters
     1. genome: List[List[int]]
         - genome to calculate fitness for
-    2. input: List[List[int]]
+    2. input_matrix: np.ndarray[np.ndarray[int | float]]
         - list of input values to calculate output for
         - each list of input values is one input
-    3. wanted_output: List[int]
+    3. wanted_output: np.ndarray[float | int]
         - list of wanted output values
     ### Returns
     float
         - fitness of genome for given input values and wanted output
         - value >= 0.0
-    ### TODO
-    - make inputs and wanted_output ndArrays
     '''
-    output = genome_output(genome, input)
+    output = genome_output(genome, input_matrix)
     mse = mean_squared_error(wanted_output, output)
     if (mse < 0):
         raise ValueError("overflow, mean squared error is negative, something went wrong with the fitness calculation")

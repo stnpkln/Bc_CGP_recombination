@@ -1,4 +1,6 @@
 import unittest
+
+import numpy as np
 from evolution import evolve, generate_new_population, get_fittest_individual
 from genome import genome_output
 from population import Population
@@ -31,19 +33,19 @@ test_genome_bad = [
     [-2, 0, -2] #   3
 ] # x
 
-wanted_function = lambda x: (x + x) * x
-
-class TestGenome(unittest.TestCase):
+class TestEvolution(unittest.TestCase):
 
     def test_get_fittest_individual(self):
+        def func(input: np.ndarray[int | float]) -> np.ndarray[int | float]:
+            x = input[0]
+            return (x + x) * x
+
         # testing if children with same fitness is chosen over parent
         population = Population(4, 4, 1)
         population.set_parent(test_genome_best_parent)
         population.set_children([test_genome_good, test_genome_bad, test_genome_best_child])
-        input = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]
-        wanted_output = []
-        for x in input[0]:
-            wanted_output.append(wanted_function(x))
+        input = np.array([np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])]) 
+        wanted_output = func(input)
         top_individual, top_fitness = get_fittest_individual(population, input, wanted_output)
         self.assertEqual(top_fitness, 0.0)
         # the only difference between best child and best parent (easier for testing)
@@ -62,29 +64,58 @@ class TestGenome(unittest.TestCase):
         for i in range(len(parent)):
             self.assertListEqual(parent[i], test_genome_best_parent[i], "parent should not be changed")
 
-        # todo maybe some test for children?
+    def test_evolve_one_input_int(self):
+        def func(input: np.ndarray[np.ndarray[int | float]]) -> np.ndarray[int | float]:
+            x = input[0]
+            return (x + x) * x
 
-    def test_evolve(self):
-        func = lambda x: x + x * x
-        input = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]
-        wanted_output = []
-        for x in input[0]:
-            wanted_output.append(func(x))
+        input = np.array([np.arange(1, 11, 1, dtype=int)])
+        wanted_output = func(input)
         solution, fitness, generation = evolve(population_size=10,
                ncolumns=10,
                nrows=1,
                input_matrix=input,
                wanted_output=wanted_output,
-               acceptable_boundary=1,
+               acceptable_boundary=0,
                max_generations=10000)
-        print(f"fitness: {fitness}, generation: {generation}")
-        print(f"solution: {solution}")
+
+        solution_output = genome_output(solution, input)
+        # print(f"fitness: {fitness}, generation: {generation}")
+        # print(f"solution: {solution}")
+        # print(f"wanted output: {wanted_output}")
+        # print(f"output of the solution: {solution_output}")
 
         if fitness == 0.0:
-            solution_output = genome_output(solution, input).tolist()
-            self.assertListEqual(wanted_output, solution_output, "solution should be correct")
-            print(f"wanted output: {wanted_output}")
-            print(f"output for given solution: {solution_output}")
+            self.assertListEqual(wanted_output.tolist(), solution_output.tolist(), "solution should be correct")
 
+    def test_evolve_one_input_float(self):
+        def func(input: np.ndarray[np.ndarray[int | float]]) -> np.ndarray[int | float]:
+            x = input[0]
+            return (x + x) * x
+
+        input = np.array([np.linspace(-1, 1, 20, dtype=float)])
+
+        wanted_output = func(input)
+        acceptable_boundary = 1e-16
+        solution, fitness, generation = evolve(population_size=10,
+               ncolumns=10,
+               nrows=1,
+               input_matrix=input,
+               wanted_output=wanted_output,
+               acceptable_boundary=acceptable_boundary,
+               max_generations=10000)
+
+        solution_output = genome_output(solution, input)
+        # print(f"fitness: {fitness}, generation: {generation}")
+        # print(f"solution: {solution}")
+        # print(f"wanted output: {wanted_output}")
+        # print(f"output of the solution: {solution_output}")
+
+        if fitness <= acceptable_boundary:
+            self.assertListEqual(wanted_output.tolist(), solution_output.tolist(), "solution should be correct")
+
+    def test_evolve_two_inputs_int(self):
+        # TODO
+        pass
 if __name__ == '__main__':
     unittest.main()
