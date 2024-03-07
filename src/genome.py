@@ -1,4 +1,5 @@
 from population import Population
+from utils import get_last_possible_input_index, get_output_gene_indexes
 from constants.operations import operations, op_inputs, op_functions
 from typing import List
 import numpy as np
@@ -8,15 +9,15 @@ from math import floor
 
 mutation_rate = 0.1
 
-def get_active_gene_indexes(output_gene_indexes: List[int], genome: List[List[int]]):
+def get_active_gene_indexes(genome: List[List[int]], output_gene_indexes: List[int]) -> List[int]:
     '''[summary]
     Returns indexes of active genes in genome
     ### Parameters
-    1. output_gene_indexes: List[int]
-        - list of indexes of output genes
-    2. genome: List[List[int]]
+    1. genome: List[List[int]]
         - genome to search active genes in
-    
+    2. output_gene_indexes: List[int]
+        - list of indexes of output genes
+
     ### Returns
     List[int]
         - list of indexes of active genes in genome
@@ -61,12 +62,12 @@ def get_active_gene_indexes(output_gene_indexes: List[int], genome: List[List[in
 
     return active_genes_indexes
 
-def genome_output(genome: List[List[int]], input_values: List[List[int]]):
+def genome_output(genome: List[List[int]], input_matrix: List[List[int]]) -> np.ndarray:
     '''[summary]
     ### Parameters
     1. genome: List[List[int]]
         - genome to calculate output for
-    2. input_values: List[List[int]]
+    2. input_matrix: List[List[int]]
         - list of input values to calculate output for
         - each list of input values is one input
 
@@ -75,11 +76,11 @@ def genome_output(genome: List[List[int]], input_values: List[List[int]]):
         - output of genome for given input values
         - works with only one output gene (TODO if necessary)
     '''
-    output_gene_indexes = [i for i in range(len(genome)) if genome[i][0] == -2]
-    active_gene_indexes = get_active_gene_indexes(output_gene_indexes, genome)
-    n_input_nodes = len(input_values) # gen number of input nodes, base on parameter input_values
+    output_gene_indexes = get_output_gene_indexes(genome)
+    active_gene_indexes = get_active_gene_indexes(genome, output_gene_indexes)
+    n_input_nodes = len(input_matrix) # gen number of input nodes, base on parameter input_matrix
     nrows = len(active_gene_indexes) + n_input_nodes # number of rows in matrix
-    ncols = len(input_values[0]) # number of columns in matrix
+    ncols = len(input_matrix[0]) # number of columns in matrix
 
     # mapping from gene index to matrix index, so we can use gene indexes to access the matrix, and the matrix can be only as big as the number of active nodes
     gene_to_matrix_mapping = {key: value for key, value in zip(active_gene_indexes[::-1], range(n_input_nodes, nrows))}
@@ -88,7 +89,7 @@ def genome_output(genome: List[List[int]], input_values: List[List[int]]):
 
     # fill the matrix with input values
     for i in range(n_input_nodes):
-        matrix[i] = input_values[i]
+        matrix[i] = input_matrix[i]
         gene_to_matrix_mapping[i] = i
 
     # fill the matrix with output of genes
@@ -116,10 +117,10 @@ def genome_output(genome: List[List[int]], input_values: List[List[int]]):
     # return the last column (output column) of the matrix
     return matrix[-1]
 
-def evaluate_fitness(genome: List[List[int]], input: List[List[int]], wanted_output: List[int]):
+def evaluate_fitness(genome: List[List[int]], input: List[List[int]], wanted_output: List[int]) -> float:
     '''[summary]
     Returns fitness of genome for given input values and wanted output.
-    Fitness is value is calculated as mean squared error between wanted output and output of genome for given input values.
+    Fitness value is calculated as mean squared error between wanted output and output of genome for given input values.
     ### Parameters
     1. genome: List[List[int]]
         - genome to calculate fitness for
@@ -136,9 +137,12 @@ def evaluate_fitness(genome: List[List[int]], input: List[List[int]], wanted_out
     - make inputs and wanted_output ndArrays
     '''
     output = genome_output(genome, input)
-    return mean_squared_error(wanted_output, output)
+    mse = mean_squared_error(wanted_output, output)
+    if (mse < 0):
+        raise ValueError("overflow, mean squared error is negative, something went wrong with the fitness calculation")
+    return mse
 
-def mutate_individual(target: List[List[int]], ncolumns, nrows):
+def mutate_individual(target: List[List[int]], ncolumns: int, nrows: int) -> List[List[int]]:
     '''[summary]
     Returns mutated individual, without changing the original
     ### Parameters
@@ -171,7 +175,7 @@ def mutate_individual(target: List[List[int]], ncolumns, nrows):
 
     return individual
 
-def mutate_gene(gene: List[int], gene_index, ncolumns, nrows):
+def mutate_gene(gene: List[int], gene_index: int, ncolumns: int, nrows: int) -> tuple[List[int], bool]:
     '''[summary]
     Returns mutated gene (may mutate the original)
     ### Parameters
@@ -215,77 +219,10 @@ def mutate_gene(gene: List[int], gene_index, ncolumns, nrows):
                 return gene, False # impossible to mutate input, if there is only one option available
 
             mutated = np.random.randint(0, last_possible_input_index)
-        
+
         # if the gene was successfully mutated, stop the loop
         if original != mutated:
             gene[allele_to_mutate] = mutated
             mutation_to_be_done = False
 
     return gene, True
-
-def get_last_possible_input_index(ncolumns: int, nrows: int, gene_index: int):
-    '''[summary]
-    For the given gene index, returns the last index that can be used as its input
-    ### Parameters
-    1. ncolumns: int
-        - number of columns in the matrix of genes
-        - must be > 0
-    2. nrows: int
-        - number of rows in the matrix of genes
-        - must be > 0
-  3. gene_index: int
-        - index of the gene in the genome
-        - must be >= 0
-    ### Returns
-    int
-        - last possible input index
-    Raises
-    ------
-    ValueError
-        - if gene_index < 0 or ncolumns < 1 or nrows < 1
-    '''
-    if (gene_index < 0 or ncolumns < 1 or nrows < 1):
-        raise ValueError("gene_index must be > 0, ncolumns must be > 0, nrows must be > 0")
-
-    column_index = get_genome_column(nrows, gene_index)
-    columns_before = column_index
-    return columns_before * nrows
-
-def get_genome_column(nrows, index):
-    '''[summary]
-    Returns the column of the genome for the given index
-    ### Parameters
-    1. nrows: int
-        - number of rows in the matrix of genes
-        - must be > 0
-    2. index: int
-        - index of the gene in the genome
-        - must be >= 0
-    ### Returns
-    int
-        - column of the genome for the given index
-    Raises
-    ------
-    ValueError
-        - if index < 0 or nrows < 1
-    '''
-    if (index < 0 or nrows < 1):
-        raise ValueError("index and nrows must be positive integers")
-
-    return index // nrows
-
-def get_number_of_gene_inputs(gene: List[int]):
-    '''[summary]
-    Returns the number of inputs for the given gene
-    ### Parameters
-    1. gene: List[int]
-        - gene to calculate number of inputs for
-    ### Returns
-    int
-        - number of inputs for the given gene
-    '''
-    if len(gene) == 0:
-        raise ValueError("gene must have at least one element")
-
-    return op_inputs[operations[gene[0]]]
-

@@ -2,30 +2,26 @@
 
 Bakalářská práce na téma "Využití operátoru křížení v kartézském genetickém programování"
 
-## Plán na zimní semestr:
+# Plán
+- dořešit TODOčka v kódu
+- vyřešit generování dokumentace (nejspíš sphynx)
+- více protestovat (ověřit validitu výstupu algoritmu)
+- nastavit parametry tak aby byly vhodné
+- experimentovat s klasickým CGP - 1 + lambda
+- vytvořit větve pro algoritmy křížení
+- otestovat, zjistit nejlepší parametry
+- začít psát bakalářskou práci
+   - nadpisy
+   - úvod (CGP obecně, CGP křížení...)
 
-1. Projít znovu rychle to co jsem si přečetl a udělat si poznámky
-2. Zjistit si něco více o práci s latexem - Overleaf
-3. Vytvořit základní strukturu bakalářky
-   1. Nadpis
-   2. Abstrakt cca
-   3. Nadpisy cca
-   4. Todo text kde by přibližně měl být
-4. Najít a zpracovat další případné zdroje
-5. Začít s bakalářskou prací
-6. Napsat dobrý abstrakt
-7. Napsat úvod
-8. Napsat rešerši na aktuální stav a řešení
-9. Vymyslet vlastní algoritmy řešení
-10. Popsat jaké algoritmy jsem vymyslel a proč jsem je zvolil
+## testování
+- windows
+   - v /src spustit `python -m unittest`
+- ubuntu
+   - v /src spustit `python3 -m unittest`
 
-## Plán na letní semestr:
+## TODOs
+- (tam kde to není) ošetřit více vstupů do jednotlivce
+- ?? přidat levels back ??
+- předělat vstupy a očekávané výstupy na numpy pole
 
-1. Projít úspěšně zimním semestrem
-2. Dopsat plán po splnění bodu 1.
-
-Obhajoba - 31.1. 10:50 (někde v systému VUT)
-https://www.overleaf.com/
-
-# testování
-- v /src spustit `python3 -m unittest`

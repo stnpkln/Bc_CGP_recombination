@@ -1,8 +1,10 @@
+from typing import List
 import numpy as np
 from constants.operations import operations, op_inputs
+from utils import get_last_possible_input_index, get_number_of_gene_inputs
 
 class Population:
-    def __init__(self, population_size, ncolumns, nrows):
+    def __init__(self, population_size: int, ncolumns: int, nrows: int) -> None:
         '''[summary]
         Initializes the population with random genomes.
         ### Parameters
@@ -35,7 +37,7 @@ class Population:
         self.parent_index = 0
         self.children_indexes = [i for i in range(1, population_size)]
 
-    def get_starting_popultation(self, population_size):
+    def get_starting_popultation(self, population_size: int) -> List[List[List[int]]]:
         '''[summary]
         Returns a list of random genomes (population).
         ### Parameters
@@ -43,7 +45,7 @@ class Population:
             - number of individuals in the population
             - must be >= 1
         ### Returns
-        List[List[int]]
+        List[List[List[int]]]
             - list of random genomes
         '''
         population = []
@@ -51,7 +53,7 @@ class Population:
             population.append(self.get_random_genome())
         return population
 
-    def get_random_genome(self):
+    def get_random_genome(self) -> List[List[int]]:
         '''[summary]
         Returns a random genome (individual).
         ### Returns
@@ -66,7 +68,7 @@ class Population:
         return genome
 
 
-    def get_random_gene(self, rowIndex, columnIndex, genome):
+    def get_random_gene(self, rowIndex: int, columnIndex: int, genome: List[List[int]]) -> List[int]:
         '''[summary]
         Returns a random gene.
         ### Parameters
@@ -101,23 +103,23 @@ class Population:
         gene[0] = operation
 
         # generating random inputs
-        index = len(genome)
-        last_possible_input = index - rowIndex
-        for i in range(op_inputs[operations[operation]]):
+        gene_index = len(genome)
+        last_possible_input = get_last_possible_input_index(self.ncolumns, self.nrows, gene_index)
+        for i in range(get_number_of_gene_inputs(gene)):
             input = np.random.randint(0, last_possible_input)
-            gene[i + 1] = input
+            gene[i + 1] = input # to skip operation gene
         
         return gene
 
-    def get_population(self):
+    def get_population(self) -> List[List[List[int]]]:
         '''[summary]
         ### Returns
-        List[List[int]]
+        List[List[List[int]]]
             - population
         '''
         return self.population
 
-    def get_individual(self, index):
+    def get_individual(self, index: int) -> List[int]:
         '''[summary]
         Returns an individual from the population.
         ### Parameters
@@ -133,14 +135,14 @@ class Population:
 
         return self.population[index]
     
-    def set_individual(self, index, individual):
+    def set_individual(self, index: int, individual: List[List[int]]) -> None:
         '''[summary]
         Sets an individual in the population.
         ### Parameters
         1. index: int
             - index of the individual
             - must be >= 0
-        2. individual: List[int]
+        2. individual: List[List[int]]
             - individual to set
         ### Returns
         None
@@ -150,7 +152,7 @@ class Population:
 
         self.population[index] = individual
 
-    def get_parent(self):
+    def get_parent(self) -> List[List[int]]:
         '''[summary]
         Returns the parent of the population.
         ### Returns
@@ -159,7 +161,7 @@ class Population:
         '''
         return self.population[self.parent_index]
     
-    def set_parent(self, new_parent):
+    def set_parent(self, new_parent: List[List[int]]) -> None:
         '''[summary]
         Sets the parent of the population.
         ### Parameters
@@ -170,7 +172,7 @@ class Population:
         '''
         self.population[self.parent_index] = new_parent
     
-    def get_children(self):
+    def get_children(self) -> List[List[List[int]]]:
         '''[summary]
         Returns the children of the population.
         ### Returns
@@ -182,7 +184,7 @@ class Population:
             children.append(self.population[child_index])
         return children
 
-    def set_children(self, new_children):
+    def set_children(self, new_children: List[List[List[int]]]) -> None:
         '''[summary]
         Sets the children of the population.
         ### Parameters
@@ -201,3 +203,20 @@ class Population:
         for i in range(len(new_children)):
             self.population[self.children_indexes[i]] = new_children[i]
         
+    def get_ninputs(self) -> int:
+        '''[summary]
+        Returns the number of inputs in the genome.
+        ### Returns
+        int
+            - number of inputs
+        '''
+        return self.nrows
+    
+    def get_noutputs(self) -> int:
+        '''[summary]
+        Returns the number of outputs in the genome.
+        ### Returns
+        int
+            - number of outputs
+        '''
+        return self.nrows

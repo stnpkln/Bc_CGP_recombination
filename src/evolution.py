@@ -2,7 +2,7 @@ from typing import List
 from population import Population
 from genome import evaluate_fitness, mutate_individual
 
-def evolve(population_size, ncolumns, nrows, input, wanted_output, acceptable_boundary, max_generations):
+def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: List[List[int]], wanted_output: List[int], acceptable_boundary: int, max_generations: int) -> tuple[List[List[int]], float, int]:
     '''[summary]
     Runs the 1 + lambda evolutionary algorithm to find a genome that solves the given problem.
     ### Parameters
@@ -15,8 +15,8 @@ def evolve(population_size, ncolumns, nrows, input, wanted_output, acceptable_bo
     3. nrows: int
         - number of rows in the genome
         - must be >= 1
-    4. input: List[List[int]]
-        - input data for the function
+    4. input_matrix: List[List[int]]
+        - input_matrix data for the function
         - must not be empty
     5. wanted_output: List[int]
         - expected output of the function
@@ -40,24 +40,25 @@ def evolve(population_size, ncolumns, nrows, input, wanted_output, acceptable_bo
         - if population_size < 1
         - if nrows < 1
         - if ncolumns < 3
-        - if len(input) == 0
+        - if len(input_matrix) == 0
         - if len(wanted_output) == 0
-        - if len(input) != len(wanted_output)
+        - if len(input matrix row) != len(wanted_output)
         - if acceptable_boundary < 0
     '''
-    if len(input) == 0:
-        raise ValueError("input must not be empty")
+    if len(input_matrix) == 0:
+        raise ValueError("input_matrix must not be empty")
     if len(wanted_output) == 0:
         raise ValueError("wanted_output must not be empty")
-    if len(input) != len(wanted_output):
-        raise ValueError("input and wanted_output must have the same length")
+    for input_row in input_matrix:
+        if len(input_row) != len(wanted_output):
+            raise ValueError("input_row and wanted_output must have the same length")
     if acceptable_boundary < 0:
         raise ValueError("acceptable_boundary must be >= 0")
 
     population = Population(population_size, ncolumns, nrows)
 
     for generation in range(max_generations):
-        new_parent, fitness = get_fittest_individual(population, input, wanted_output)
+        new_parent, fitness = get_fittest_individual(population, input_matrix, wanted_output)
         
         # found an acceptable solution before max_generations was reached
         if fitness < acceptable_boundary:
@@ -67,7 +68,7 @@ def evolve(population_size, ncolumns, nrows, input, wanted_output, acceptable_bo
     
     return new_parent, fitness, generation
 
-def generate_new_population(new_parent: List[List[int]], population: Population):
+def generate_new_population(new_parent: List[List[int]], population: Population) -> None:
     '''[summary]
     Generates new children from the given parent and sets them to the population.
     ### Parameters
@@ -88,14 +89,14 @@ def generate_new_population(new_parent: List[List[int]], population: Population)
     population.set_children(new_children)
     population.set_parent(new_parent)
 
-def get_fittest_individual(population: Population, input: List[List[int]], wanted_output: List[int]):
+def get_fittest_individual(population: Population, input_matrix: List[List[int]], wanted_output: List[int]) -> tuple[List[List[int]], float]:
     '''[summary]
     Returns the fittest individual from the given population.
     ### Parameters
     1. population: Population
         - population to get the fittest individual from
-    2. input: List[List[int]]
-        - input data for the function
+    2. input_matrix: List[List[int]]
+        - input_matrix data for the function
     3. wanted_output: List[int]
         - expected output of the function
     ### Returns
@@ -107,11 +108,11 @@ def get_fittest_individual(population: Population, input: List[List[int]], wante
     parent = population.get_parent()
     children = population.get_children()
 
-    top_fitness = evaluate_fitness(parent, input, wanted_output)
+    top_fitness = evaluate_fitness(parent, input_matrix, wanted_output)
     top_individual = parent
 
     for child in children:
-        child_fitness = evaluate_fitness(child, input, wanted_output)
+        child_fitness = evaluate_fitness(child, input_matrix, wanted_output)
         # comparing fitness, the best fitness is the lowest
         if (child_fitness <= top_fitness):
             top_fitness = child_fitness

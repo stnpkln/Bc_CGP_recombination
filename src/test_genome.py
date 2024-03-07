@@ -1,5 +1,5 @@
 import unittest
-from genome import evaluate_fitness, get_active_gene_indexes, genome_output, get_genome_column, get_last_possible_input_index, get_number_of_gene_inputs, mutate_gene, mutate_individual
+from genome import evaluate_fitness, get_active_gene_indexes, genome_output, mutate_gene, mutate_individual
 from constants.operations import operations, op_inputs
 import numpy as np
 
@@ -36,7 +36,7 @@ test_wanted_function = lambda x: (2 * x * x + 2 * x) ** 2
 class TestGenome(unittest.TestCase):
 
     def test_get_active_gene_indexes(self):
-        active_genes = get_active_gene_indexes([9], test_genome)
+        active_genes = get_active_gene_indexes(test_genome, [9])
         self.assertEqual(len(active_genes), 6, f"Should be 6, active genes are: {active_genes}")
         self.assertEqual(set(active_genes), set([9, 8, 6, 5, 2, 1]), f"active genes are: {active_genes}, but they sould be 9, 8, 6, 5, 2, 1, 0")
 
@@ -60,30 +60,6 @@ class TestGenome(unittest.TestCase):
         self.assertEqual(evaluate_fitness(test_genome, genome_input, wanted_output), 0)
 
         self.assertTrue(evaluate_fitness(test_genome_small, genome_input, wanted_output) > 0)
-
-    def test_get_number_of_gene_inputs(self):
-        gene = [0, 0, 0]
-        self.assertEqual(get_number_of_gene_inputs(gene), 2, "incorrect number of inputs for gene")
-
-    def test_get_genome_column(self):
-        nrows = 2
-        self.assertEqual(get_genome_column(nrows, 0), 0, "incorrect genome row")
-        self.assertEqual(get_genome_column(nrows, 1), 0, "incorrect genome row")
-        self.assertEqual(get_genome_column(nrows, 2), 1, "incorrect genome row")
-        self.assertEqual(get_genome_column(nrows, 9), 4, "incorrect genome row")
-    
-    def test_last_possible_input_index(self):
-        self.assertEqual(get_last_possible_input_index(3, 3, 0), 0, "incorrect last possible input index")
-        self.assertEqual(get_last_possible_input_index(3, 3, 1), 0, "incorrect last possible input index")
-        self.assertEqual(get_last_possible_input_index(3, 3, 2), 0, "incorrect last possible input index")
-        self.assertEqual(get_last_possible_input_index(3, 3, 3), 3, "incorrect last possible input index")
-        self.assertEqual(get_last_possible_input_index(3, 3, 4), 3, "incorrect last possible input index")
-        self.assertEqual(get_last_possible_input_index(3, 3, 5), 3, "incorrect last possible input index")
-        self.assertEqual(get_last_possible_input_index(3, 3, 6), 6, "incorrect last possible input index")
-        self.assertEqual(get_last_possible_input_index(3, 3, 7), 6, "incorrect last possible input index")
-        self.assertEqual(get_last_possible_input_index(3, 3, 8), 6, "incorrect last possible input index")
-
-        self.assertEqual(get_last_possible_input_index(4, 1, 2), 2, "incorrect last possible input index")
 
     def test_mutate_gene(self):
         gene, success = mutate_gene([-1, -1, -1], 0, 3, 3)

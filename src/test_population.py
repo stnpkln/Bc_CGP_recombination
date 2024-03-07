@@ -6,7 +6,8 @@ class TestPopulation(unittest.TestCase):
 
     def test_get_random_gene(self):
         # empty population
-        self.assertRaises(ValueError, p = Population(0, 0, 0))
+        with self.assertRaises(ValueError): 
+            Population(0, 0, 0)
 
         # inputs
         p = Population(5, 10, 1)
