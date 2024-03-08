@@ -106,10 +106,10 @@ class TestEvolution(unittest.TestCase):
                max_generations=10000)
 
         solution_output = genome_output(solution, input)
-        print(f"fitness: {fitness}, generation: {generation}")
-        print(f"solution: {solution}")
-        print(f"wanted output: {wanted_output}")
-        print(f"output of the solution: {solution_output}")
+        # print(f"fitness: {fitness}, generation: {generation}")
+        # print(f"solution: {solution}")
+        # print(f"wanted output: {wanted_output}")
+        # print(f"output of the solution: {solution_output}")
 
         if fitness <= acceptable_boundary:
             self.assertListEqual(wanted_output.tolist(), solution_output.tolist(), "solution should be correct")
