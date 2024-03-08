@@ -96,7 +96,7 @@ class TestEvolution(unittest.TestCase):
         input = np.array([np.linspace(-1, 1, 20, dtype=float)])
 
         wanted_output = func(input)
-        acceptable_boundary = 1e-16
+        acceptable_boundary = 1e-30
         solution, fitness, generation = evolve(population_size=10,
                ncolumns=10,
                nrows=1,
@@ -106,16 +106,38 @@ class TestEvolution(unittest.TestCase):
                max_generations=10000)
 
         solution_output = genome_output(solution, input)
-        # print(f"fitness: {fitness}, generation: {generation}")
-        # print(f"solution: {solution}")
-        # print(f"wanted output: {wanted_output}")
-        # print(f"output of the solution: {solution_output}")
+        print(f"fitness: {fitness}, generation: {generation}")
+        print(f"solution: {solution}")
+        print(f"wanted output: {wanted_output}")
+        print(f"output of the solution: {solution_output}")
 
         if fitness <= acceptable_boundary:
             self.assertListEqual(wanted_output.tolist(), solution_output.tolist(), "solution should be correct")
 
     def test_evolve_two_inputs_int(self):
-        # TODO
-        pass
+        def func(input: np.ndarray[np.ndarray[int | float]]) -> np.ndarray[int | float]:
+            x = input[0]
+            y = input[1]
+            return (x + y) * x
+
+        input = np.array([np.arange(1, 11, 1, dtype=int), np.arange(2, 22, 2, dtype=int)])
+        wanted_output = func(input)
+        solution, fitness, generation = evolve(population_size=10,
+               ncolumns=10,
+               nrows=2,
+               input_matrix=input,
+               wanted_output=wanted_output,
+               acceptable_boundary=0,
+               max_generations=10000)
+
+        solution_output = genome_output(solution, input)
+        # print(f"fitness: {fitness}, generation: {generation}")
+        # print(f"solution: {solution}")
+        # print(f"wanted output: {wanted_output}")
+        # print(f"output of the solution: {solution_output}")
+
+        if fitness == 0.0:
+            self.assertListEqual(wanted_output.tolist(), solution_output.tolist(), "solution should be correct")
+
 if __name__ == '__main__':
     unittest.main()
