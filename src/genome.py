@@ -109,10 +109,16 @@ def genome_output(genome: List[List[int]], input_matrix: np.ndarray[np.ndarray[i
                 continue
 
             # function genes
-            # TODO, so far works only with operations that have two inputs
-            first_input = matrix[gene_to_matrix_mapping[gene[1]]]
-            second_input = matrix[gene_to_matrix_mapping[gene[2]]]
-            matrix[gene_to_matrix_mapping[gene_index]] = op_functions[operations[gene_operation]](first_input, second_input) # calculate the output of the gene
+            n_of_op_inputs = op_inputs[operations[gene_operation]]
+            op_function = op_functions[operations[gene_operation]]
+
+            if n_of_op_inputs == 1:
+                first_input = matrix[gene_to_matrix_mapping[gene[1]]]
+                matrix[gene_to_matrix_mapping[gene_index]] = op_function(first_input)
+            elif n_of_op_inputs == 2:
+                first_input = matrix[gene_to_matrix_mapping[gene[1]]]
+                second_input = matrix[gene_to_matrix_mapping[gene[2]]]
+                matrix[gene_to_matrix_mapping[gene_index]] = op_function(first_input, second_input) # calculate the output of the gene
 
     # return the last column (output column) of the matrix
     return matrix[-1]

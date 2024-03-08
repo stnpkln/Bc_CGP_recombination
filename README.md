@@ -3,11 +3,11 @@
 Bakalářská práce na téma "Využití operátoru křížení v kartézském genetickém programování"
 
 # Plán
-- dořešit TODOčka v kódu
-- vyřešit generování dokumentace (nejspíš sphynx)
-- více protestovat (ověřit validitu výstupu algoritmu)
-- nastavit parametry tak aby byly vhodné
+- dořešit TODOčka v kódu DONE
+- více protestovat (ověřit validitu výstupu algoritmu) DONE
+- nastavit parametry tak aby byly vhodné ? ASI DONE ?
 - experimentovat s klasickým CGP - 1 + lambda
+- vyřešit generování dokumentace (nejspíš sphynx)
 - vytvořit větve pro algoritmy křížení
 - otestovat, zjistit nejlepší parametry
 - začít psát bakalářskou práci
@@ -21,7 +21,6 @@ Bakalářská práce na téma "Využití operátoru křížení v kartézském g
    - v /src spustit `python3 -m unittest`
 
 ## TODOs
-- (tam kde to není) ošetřit více vstupů do jednotlivce
 - ?? přidat levels back ??
-- předělat vstupy a očekávané výstupy na numpy pole
+- ošetetřit operace ln(|x|) a e^n
 

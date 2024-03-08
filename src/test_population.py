@@ -46,7 +46,7 @@ class TestPopulation(unittest.TestCase):
 
             self.assertTrue(gene[0] in range(len(operations)), f"operation should be in range of operations, received {gene[0]} in a gene with index {i}, but operations have max value {len(operations)}")
             self.assertTrue(gene[1] in range((len(genome) - 1) - i % nrows), f"first input should be in range of genome, got {gene[1]} in a gene with index {i} and genome length {len(genome)}")
-            self.assertTrue(gene[2] in range((len(genome) - 1) - i % nrows), f"second input should be in range of genome, got {gene[1]} in a gene with index {i} and genome length {len(genome)}")
+            self.assertTrue((gene[2] in range((len(genome) - 1) - i % nrows) or gene[2] == -1), f"second input should be in range of genome, got {gene[2]} in a gene with index {i} and genome length {len(genome)}")
 
     def test_get_starting_population(self):
         nrows = 10
