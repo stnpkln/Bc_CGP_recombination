@@ -1,5 +1,6 @@
-from typing import List
 from population import Population
+
+from typing import List
 from genome import evaluate_fitness, mutate_individual
 import numpy as np
 

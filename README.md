@@ -22,5 +22,3 @@ Bakalářská práce na téma "Využití operátoru křížení v kartézském g
 
 ## TODOs
 - ?? přidat levels back ??
-- ošetetřit operace ln(|x|) a e^n
-

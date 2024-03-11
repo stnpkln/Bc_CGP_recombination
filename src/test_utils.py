@@ -1,5 +1,6 @@
-import unittest
 from utils import get_genome_column, get_last_possible_input_index, get_number_of_gene_inputs, get_output_gene_indexes
+
+import unittest
 
 test_genome_small = [
     [-1, -1, -1],   # 0

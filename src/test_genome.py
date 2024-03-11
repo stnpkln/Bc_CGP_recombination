@@ -1,6 +1,7 @@
-import unittest
 from genome import evaluate_fitness, get_active_gene_indexes, genome_output, mutate_gene, mutate_individual
-from constants.operations import operations, op_inputs
+from constants.operations import operations
+
+import unittest
 import numpy as np
 
 test_genome_small = [

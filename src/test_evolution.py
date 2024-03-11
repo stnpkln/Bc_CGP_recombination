@@ -1,9 +1,9 @@
-import unittest
-
-import numpy as np
 from evolution import evolve, generate_new_population, get_fittest_individual
 from genome import genome_output
 from population import Population
+
+import unittest
+import numpy as np
 
 test_genome_best_parent = [
     [-1, -1, -1], # 0

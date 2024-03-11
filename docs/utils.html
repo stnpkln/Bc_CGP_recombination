@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>utils API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>utils</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from constants.operations import operations, op_inputs
+
+from typing import List
+
+
+def get_last_possible_input_index(ncolumns: int, nrows: int, gene_index: int) -&gt; int:
+    &#39;&#39;&#39;[summary]
+    For the given gene index, returns the last index that can be used as its input
+    ### Parameters
+    1. ncolumns: int
+        - number of columns in the matrix of genes
+        - must be &gt; 0
+    2. nrows: int
+        - number of rows in the matrix of genes
+        - must be &gt; 0
+  3. gene_index: int
+        - index of the gene in the genome
+        - must be &gt;= 0
+    ### Returns
+    int
+        - last possible input index
+    Raises
+    ------
+    ValueError
+        - if gene_index &lt; 0 or ncolumns &lt; 1 or nrows &lt; 1
+    &#39;&#39;&#39;
+    if (gene_index &lt; 0 or ncolumns &lt; 1 or nrows &lt; 1):
+        raise ValueError(&#34;gene_index must be &gt; 0, ncolumns must be &gt; 0, nrows must be &gt; 0&#34;)
+
+    column_index = get_genome_column(nrows, gene_index)
+    columns_before = column_index
+    return columns_before * nrows
+
+def get_genome_column(nrows: int, index: int) -&gt; int:
+    &#39;&#39;&#39;[summary]
+    Returns the column of the genome for the given index
+    ### Parameters
+    1. nrows: int
+        - number of rows in the matrix of genes
+        - must be &gt; 0
+    2. index: int
+        - index of the gene in the genome
+        - must be &gt;= 0
+    ### Returns
+    int
+        - column of the genome for the given index
+    Raises
+    ------
+    ValueError
+        - if index &lt; 0 or nrows &lt; 1
+    &#39;&#39;&#39;
+    if (index &lt; 0 or nrows &lt; 1):
+        raise ValueError(&#34;index and nrows must be positive integers&#34;)
+
+    return index // nrows
+
+def get_number_of_gene_inputs(gene: List[int]) -&gt; int:
+    &#39;&#39;&#39;[summary]
+    Returns the number of inputs for the given gene
+    ### Parameters
+    1. gene: List[int]
+        - gene to calculate number of inputs for
+    ### Returns
+    int
+        - number of inputs for the given gene
+    &#39;&#39;&#39;
+    if len(gene) == 0:
+        raise ValueError(&#34;gene must have at least one element&#34;)
+
+    return op_inputs[operations[gene[0]]]
+
+def get_output_gene_indexes(genome: List[List[int]]) -&gt; List[int]:
+    &#39;&#39;&#39;[summary]
+    Returns indexes of output genes in genome
+    ### Parameters
+    1. genome: List[List[int]]
+        - genome to search output genes in
+    ### Returns
+    List[int]
+        - list of indexes of output genes in genome
+    &#39;&#39;&#39;
+    return [i for i in range(len(genome)) if genome[i][0] == -2] # TODO may be optimized (last column of the genome matrix)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="utils.get_genome_column"><code class="name flex">
+<span>def <span class="ident">get_genome_column</span></span>(<span>nrows: int, index: int) ‑> int</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Returns the column of the genome for the given index</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>nrows: int<ul>
+<li>number of rows in the matrix of genes</li>
+<li>must be &gt; 0</li>
+</ul>
+</li>
+<li>index: int<ul>
+<li>index of the gene in the genome</li>
+<li>must be &gt;= 0</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>int
+- column of the genome for the given index
+Raises</p>
+<hr>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>
+<ul>
+<li>if index &lt; 0 or nrows &lt; 1</li>
+</ul>
+</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_genome_column(nrows: int, index: int) -&gt; int:
+    &#39;&#39;&#39;[summary]
+    Returns the column of the genome for the given index
+    ### Parameters
+    1. nrows: int
+        - number of rows in the matrix of genes
+        - must be &gt; 0
+    2. index: int
+        - index of the gene in the genome
+        - must be &gt;= 0
+    ### Returns
+    int
+        - column of the genome for the given index
+    Raises
+    ------
+    ValueError
+        - if index &lt; 0 or nrows &lt; 1
+    &#39;&#39;&#39;
+    if (index &lt; 0 or nrows &lt; 1):
+        raise ValueError(&#34;index and nrows must be positive integers&#34;)
+
+    return index // nrows</code></pre>
+</details>
+</dd>
+<dt id="utils.get_last_possible_input_index"><code class="name flex">
+<span>def <span class="ident">get_last_possible_input_index</span></span>(<span>ncolumns: int, nrows: int, gene_index: int) ‑> int</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+For the given gene index, returns the last index that can be used as its input
+### Parameters
+1. ncolumns: int
+- number of columns in the matrix of genes
+- must be &gt; 0
+2. nrows: int
+- number of rows in the matrix of genes
+- must be &gt; 0
+3. gene_index: int
+- index of the gene in the genome
+- must be &gt;= 0
+### Returns
+int
+- last possible input index
+Raises</p>
+<hr>
+<p>ValueError
+- if gene_index &lt; 0 or ncolumns &lt; 1 or nrows &lt; 1</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_last_possible_input_index(ncolumns: int, nrows: int, gene_index: int) -&gt; int:
+    &#39;&#39;&#39;[summary]
+    For the given gene index, returns the last index that can be used as its input
+    ### Parameters
+    1. ncolumns: int
+        - number of columns in the matrix of genes
+        - must be &gt; 0
+    2. nrows: int
+        - number of rows in the matrix of genes
+        - must be &gt; 0
+  3. gene_index: int
+        - index of the gene in the genome
+        - must be &gt;= 0
+    ### Returns
+    int
+        - last possible input index
+    Raises
+    ------
+    ValueError
+        - if gene_index &lt; 0 or ncolumns &lt; 1 or nrows &lt; 1
+    &#39;&#39;&#39;
+    if (gene_index &lt; 0 or ncolumns &lt; 1 or nrows &lt; 1):
+        raise ValueError(&#34;gene_index must be &gt; 0, ncolumns must be &gt; 0, nrows must be &gt; 0&#34;)
+
+    column_index = get_genome_column(nrows, gene_index)
+    columns_before = column_index
+    return columns_before * nrows</code></pre>
+</details>
+</dd>
+<dt id="utils.get_number_of_gene_inputs"><code class="name flex">
+<span>def <span class="ident">get_number_of_gene_inputs</span></span>(<span>gene: List[int]) ‑> int</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Returns the number of inputs for the given gene</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>gene: List[int]<ul>
+<li>gene to calculate number of inputs for</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>int
+- number of inputs for the given gene</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_number_of_gene_inputs(gene: List[int]) -&gt; int:
+    &#39;&#39;&#39;[summary]
+    Returns the number of inputs for the given gene
+    ### Parameters
+    1. gene: List[int]
+        - gene to calculate number of inputs for
+    ### Returns
+    int
+        - number of inputs for the given gene
+    &#39;&#39;&#39;
+    if len(gene) == 0:
+        raise ValueError(&#34;gene must have at least one element&#34;)
+
+    return op_inputs[operations[gene[0]]]</code></pre>
+</details>
+</dd>
+<dt id="utils.get_output_gene_indexes"><code class="name flex">
+<span>def <span class="ident">get_output_gene_indexes</span></span>(<span>genome: List[List[int]]) ‑> List[int]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Returns indexes of output genes in genome</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>genome: List[List[int]]<ul>
+<li>genome to search output genes in</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>List[int]
+- list of indexes of output genes in genome</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_output_gene_indexes(genome: List[List[int]]) -&gt; List[int]:
+    &#39;&#39;&#39;[summary]
+    Returns indexes of output genes in genome
+    ### Parameters
+    1. genome: List[List[int]]
+        - genome to search output genes in
+    ### Returns
+    List[int]
+        - list of indexes of output genes in genome
+    &#39;&#39;&#39;
+    return [i for i in range(len(genome)) if genome[i][0] == -2] # TODO may be optimized (last column of the genome matrix)</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="utils.get_genome_column" href="#utils.get_genome_column">get_genome_column</a></code></li>
+<li><code><a title="utils.get_last_possible_input_index" href="#utils.get_last_possible_input_index">get_last_possible_input_index</a></code></li>
+<li><code><a title="utils.get_number_of_gene_inputs" href="#utils.get_number_of_gene_inputs">get_number_of_gene_inputs</a></code></li>
+<li><code><a title="utils.get_output_gene_indexes" href="#utils.get_output_gene_indexes">get_output_gene_indexes</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

@@ -1,6 +1,5 @@
-from population import Population
-from utils import get_last_possible_input_index, get_output_gene_indexes
 from constants.operations import operations, op_inputs, op_functions
+from utils import get_last_possible_input_index, get_output_gene_indexes
 from typing import List
 import numpy as np
 from sklearn.metrics import mean_squared_error

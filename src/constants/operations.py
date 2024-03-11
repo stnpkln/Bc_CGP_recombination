@@ -1,7 +1,6 @@
 import math
 import numpy as np
 
-# toodo add e^n and ln(|x|) to operations, so far they break the program
 operations = ['+', '-', '*', '%', 'sin', 'cos', 'e^n']
 op_inputs = {
 	'+': 2,

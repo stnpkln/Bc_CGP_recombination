@@ -1,7 +1,7 @@
-from typing import List
-import numpy as np
 from constants.operations import operations, op_inputs
 from utils import get_last_possible_input_index, get_number_of_gene_inputs
+from typing import List
+import numpy as np
 
 class Population:
     def __init__(self, population_size: int, ncolumns: int, nrows: int) -> None:

@@ -1,6 +1,7 @@
-import unittest
 from population import Population
-from constants.operations import operations, op_inputs
+from constants.operations import operations
+
+import unittest
 
 class TestPopulation(unittest.TestCase):
 

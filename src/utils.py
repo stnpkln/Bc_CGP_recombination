@@ -1,6 +1,7 @@
 
-from typing import List
 from constants.operations import operations, op_inputs
+
+from typing import List
 
 
 def get_last_possible_input_index(ncolumns: int, nrows: int, gene_index: int) -> int:
