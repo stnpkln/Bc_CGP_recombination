@@ -20,5 +20,9 @@ Bakalářská práce na téma "Využití operátoru křížení v kartézském g
 - ubuntu
    - v /src spustit `python3 -m unittest`
 
+## dokumentace
+- v /docs
+- generování: `./generate-docs.sh`
+
 ## TODOs
 - ?? přidat levels back ??
