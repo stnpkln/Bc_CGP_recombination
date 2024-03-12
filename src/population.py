@@ -4,7 +4,7 @@ from typing import List
 import numpy as np
 
 class Population:
-    def __init__(self, population_size: int, ncolumns: int, nrows: int) -> None:
+    def __init__(self, population_size: int, ncolumns: int, nrows: int, mutation_rate) -> None:
         '''[summary]
         Initializes the population with random genomes.
         ### Parameters
@@ -17,6 +17,9 @@ class Population:
         3. nrows: int
             - number of rows in the genome
             - must be >= 1
+        4. mutation_rate: int
+            - mutation rate of the algorithm
+            - must be >= 0 and <= 1
         ### Raises
         ------
         ValueError
@@ -30,12 +33,15 @@ class Population:
             raise ValueError("nrows must be >= 1")
         if ncolumns < 3:
             raise ValueError("ncolumns must be >= 3")
+        if mutation_rate < 0 or mutation_rate > 1:
+            raise ValueError("mutation_rate must be >= 0 and <= 1")
 
         self.nrows = nrows
         self.ncolumns = ncolumns
         self.population = self.get_starting_popultation(population_size)
         self.parent_index = 0
         self.children_indexes = [i for i in range(1, population_size)]
+        self.mutation_rate = mutation_rate
 
     def get_starting_popultation(self, population_size: int) -> List[List[List[int]]]:
         '''[summary]
@@ -220,3 +226,12 @@ class Population:
             - number of outputs
         '''
         return self.nrows
+    
+    def get_mutation_rate(self) -> float:
+        '''[summary]
+        Returns the mutation rate of the population.
+        ### Returns
+        float
+            - mutation rate
+        '''
+        return self.mutation_rate

@@ -4,7 +4,7 @@ from typing import List
 from genome import evaluate_fitness, mutate_individual
 import numpy as np
 
-def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: np.ndarray[np.ndarray[int | float]], wanted_output: np.ndarray[float | int], acceptable_boundary: int, max_generations: int) -> tuple[List[List[int]], float, int]:
+def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: np.ndarray[np.ndarray[int | float]], wanted_output: np.ndarray[float | int], acceptable_boundary: int, max_generations: int, mutation_rate: int) -> tuple[List[List[int]], float, int, int]:
     '''[summary]
     Runs the 1 + lambda evolutionary algorithm to find a genome that solves the given problem.
     ### Parameters
@@ -29,6 +29,9 @@ def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: np.nda
     7. max_generations: int
         - maximum number of generations to run the algorithm
         - must be >= 1
+    8. mutation_rate: int
+        - mutation rate of the algorithm
+        - must be >= 0 and <= 1
     ### Returns
     1. List[List[int]]
         - best individual found
@@ -36,6 +39,8 @@ def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: np.nda
         - fitness of the best individual
     3. int
         - number of generations the algorithm ran
+    4. int
+        - number of fitness evaluations the algorithm ran
     Raises
     ------
     ValueError
@@ -56,10 +61,14 @@ def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: np.nda
             raise ValueError("input_row and wanted_output must have the same length")
     if acceptable_boundary < 0:
         raise ValueError("acceptable_boundary must be >= 0")
+    if mutation_rate < 0 or mutation_rate > 1:
+        raise ValueError("mutation_rate must be >= 0 and <= 1")
 
-    population = Population(population_size, ncolumns, nrows)
+    population = Population(population_size, ncolumns, nrows, mutation_rate)
 
-    for generation in range(max_generations):
+    fitness_evaluations = 0
+    for generation in range(1, max_generations + 1):
+        fitness_evaluations += population_size
         new_parent, fitness = get_fittest_individual(population, input_matrix, wanted_output)
 
         # found an acceptable solution before max_generations was reached
@@ -68,7 +77,7 @@ def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: np.nda
 
         generate_new_population(new_parent, population)
     
-    return new_parent, fitness, generation
+    return new_parent, fitness, generation, fitness_evaluations
 
 def generate_new_population(new_parent: List[List[int]], population: Population) -> None:
     '''[summary]
@@ -85,7 +94,7 @@ def generate_new_population(new_parent: List[List[int]], population: Population)
     new_children = []
 
     for i in range(n_children):
-        new_child = mutate_individual(new_parent, population.ncolumns, population.nrows)
+        new_child = mutate_individual(new_parent, population.ncolumns, population.nrows, population.mutation_rate)
         new_children.append(new_child)
 
     population.set_children(new_children)

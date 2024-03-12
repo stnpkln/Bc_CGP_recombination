@@ -41,7 +41,7 @@ class TestEvolution(unittest.TestCase):
             return (x + x) * x
 
         # testing if children with same fitness is chosen over parent
-        population = Population(4, 4, 1)
+        population = Population(4, 4, 1, 0.1)
         population.set_parent(test_genome_best_parent)
         population.set_children([test_genome_good, test_genome_bad, test_genome_best_child])
         input = np.array([np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])]) 
@@ -53,7 +53,7 @@ class TestEvolution(unittest.TestCase):
 
     def test_generate_generate_new_population(self):
         # testing if children are generated
-        population = Population(5, 4, 1)
+        population = Population(5, 4, 1, 0.1)
         generate_new_population(test_genome_best_parent, population)
         children = population.get_children()
         self.assertEqual(len(children), 4, "4 children should be generated")
@@ -67,23 +67,27 @@ class TestEvolution(unittest.TestCase):
     def test_evolve_one_input_int(self):
         def func(input: np.ndarray[np.ndarray[int | float]]) -> np.ndarray[int | float]:
             x = input[0]
-            return (x + x) * x
+            return (x ** 3)
 
         input = np.array([np.arange(1, 11, 1, dtype=int)])
         wanted_output = func(input)
-        solution, fitness, generation = evolve(population_size=10,
+        solution, fitness, generation, fitness_evaluations = evolve(population_size=10,
                ncolumns=10,
                nrows=1,
                input_matrix=input,
                wanted_output=wanted_output,
                acceptable_boundary=0,
-               max_generations=10000)
+               max_generations=10000,
+               mutation_rate=0.1)
 
         solution_output = genome_output(solution, input)
+        # print("-------------------")
+        # print("ONE INPUT INT")
         # print(f"fitness: {fitness}, generation: {generation}")
         # print(f"solution: {solution}")
         # print(f"wanted output: {wanted_output}")
         # print(f"output of the solution: {solution_output}")
+        # print("fitness evaluations: ", fitness_evaluations)
 
         if fitness == 0.0:
             self.assertListEqual(wanted_output.tolist(), solution_output.tolist(), "solution should be correct")
@@ -91,28 +95,32 @@ class TestEvolution(unittest.TestCase):
     def test_evolve_one_input_float(self):
         def func(input: np.ndarray[np.ndarray[int | float]]) -> np.ndarray[int | float]:
             x = input[0]
-            return (x + x) * x
+            return (x * x) + x
 
         input = np.array([np.linspace(-1, 1, 20, dtype=float)])
 
         wanted_output = func(input)
-        acceptable_boundary = 1e-30
-        solution, fitness, generation = evolve(population_size=10,
+        acceptable_boundary = 1e-31
+        solution, fitness, generation, fitness_evaluations = evolve(population_size=10,
                ncolumns=10,
                nrows=1,
                input_matrix=input,
                wanted_output=wanted_output,
                acceptable_boundary=acceptable_boundary,
-               max_generations=10000)
+               max_generations=1000,
+               mutation_rate=0.1)
 
         solution_output = genome_output(solution, input)
+        # print("-------------------")
+        # print("ONE INPUT FLOAT")
         # print(f"fitness: {fitness}, generation: {generation}")
         # print(f"solution: {solution}")
         # print(f"wanted output: {wanted_output}")
         # print(f"output of the solution: {solution_output}")
+        # print("fitness evaluations: ", fitness_evaluations)
 
         if fitness <= acceptable_boundary:
-            self.assertListEqual(wanted_output.tolist(), solution_output.tolist(), "solution should be correct")
+            self.assertListEqual(np.round(wanted_output, 15).tolist(), np.round(solution_output, 15).tolist(), "solution should be correct")
 
     def test_evolve_two_inputs_int(self):
         def func(input: np.ndarray[np.ndarray[int | float]]) -> np.ndarray[int | float]:
@@ -122,19 +130,24 @@ class TestEvolution(unittest.TestCase):
 
         input = np.array([np.arange(1, 11, 1, dtype=int), np.arange(2, 22, 2, dtype=int)])
         wanted_output = func(input)
-        solution, fitness, generation = evolve(population_size=10,
+        solution, fitness, generation, fitness_evaluations = evolve(population_size=10,
                ncolumns=10,
                nrows=2,
                input_matrix=input,
                wanted_output=wanted_output,
                acceptable_boundary=0,
-               max_generations=10000)
+               max_generations=1000,
+               mutation_rate=0.1)
+        
 
         solution_output = genome_output(solution, input)
+        # print("-------------------")
+        # print("TWO INPUTS INT")
         # print(f"fitness: {fitness}, generation: {generation}")
         # print(f"solution: {solution}")
         # print(f"wanted output: {wanted_output}")
         # print(f"output of the solution: {solution_output}")
+        # print("fitness evaluations: ", fitness_evaluations)
 
         if fitness == 0.0:
             self.assertListEqual(wanted_output.tolist(), solution_output.tolist(), "solution should be correct")

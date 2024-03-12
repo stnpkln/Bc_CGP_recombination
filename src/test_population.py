@@ -8,10 +8,10 @@ class TestPopulation(unittest.TestCase):
     def test_get_random_gene(self):
         # empty population
         with self.assertRaises(ValueError): 
-            Population(0, 0, 0)
+            Population(0, 0, 0, 0.1)
 
         # inputs
-        p = Population(5, 10, 1)
+        p = Population(5, 10, 1, 0.1)
         gene = p.get_random_gene(0, 0, [])
         self.assertEqual(gene, [-1, -1, -1], "Should be [-1, -1, -1]")
         gene = p.get_random_gene(0, 9, [0] * 9)
@@ -24,7 +24,7 @@ class TestPopulation(unittest.TestCase):
     def test_get_random_genome(self):
         ncols = 100
         nrows = 20
-        p = Population(5, ncols, nrows)
+        p = Population(5, ncols, nrows, 0.1)
 
         # basic tests
         genome = p.get_random_genome()
@@ -53,7 +53,7 @@ class TestPopulation(unittest.TestCase):
         nrows = 10
         ncols = 10
         pupulation_size = 5
-        p = Population(pupulation_size, nrows, ncols)
+        p = Population(pupulation_size, nrows, ncols, 0.1)
         population = p.get_starting_popultation(5)
         self.assertEqual(len(population), pupulation_size, f"population should have {pupulation_size} genomes")
         for genome in population:
@@ -63,7 +63,7 @@ class TestPopulation(unittest.TestCase):
         ncols = 10
         nrows = 10
         pupulation_size = 5
-        p = Population(pupulation_size, ncols, nrows)
+        p = Population(pupulation_size, ncols, nrows, 0.1)
 
         self.assertEqual(p.ncolumns, ncols, f"ncolumns should be {ncols}")
         self.assertEqual(p.nrows, nrows, f"nrows should be {nrows}")
@@ -71,7 +71,7 @@ class TestPopulation(unittest.TestCase):
 
         ncols = 50
         nrows = 1
-        p = Population(pupulation_size, ncols, nrows)
+        p = Population(pupulation_size, ncols, nrows, 0.1)
 
         self.assertEqual(p.ncolumns, ncols, f"ncolumns should be {ncols}")
         self.assertEqual(p.nrows, nrows, f"nrows should be {nrows}")

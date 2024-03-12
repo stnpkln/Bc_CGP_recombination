@@ -145,7 +145,7 @@ def evaluate_fitness(genome: List[List[int]], input_matrix: np.ndarray[np.ndarra
         raise ValueError("overflow, mean squared error is negative, something went wrong with the fitness calculation")
     return mse
 
-def mutate_individual(target: List[List[int]], ncolumns: int, nrows: int) -> List[List[int]]:
+def mutate_individual(target: List[List[int]], ncolumns: int, nrows: int, mutation_rate: int) -> List[List[int]]:
     '''[summary]
     Returns mutated individual, without changing the original
     ### Parameters
@@ -155,6 +155,8 @@ def mutate_individual(target: List[List[int]], ncolumns: int, nrows: int) -> Lis
         - number of columns in the matrix of genes
     3. nrows: int
         - number of rows in the matrix of genes
+    4. mutation_rate: int
+        - mutation rate of the algorithm
     ### Returns
     List[List[int]]
         - mutated individual

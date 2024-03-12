@@ -83,7 +83,7 @@ class TestGenome(unittest.TestCase):
         gene2 = [2, 0, 1]
         gene3 = [-2, 2, -2]
         test_genome = [gene0, gene1, gene2, gene3]
-        mutate_individual(test_genome, 4, 1)
+        mutate_individual(test_genome, 4, 1, 0.1)
 
         # checking if the mutation doesnt change the original genome
         self.assertListEqual(test_genome[0], gene0, "mutated genome should not change the original")
@@ -93,7 +93,7 @@ class TestGenome(unittest.TestCase):
 
         # checking if there is no mutation out of bounds
         for i in range(100):
-            mutated_genome = mutate_individual(test_genome, 4, 1)
+            mutated_genome = mutate_individual(test_genome, 4, 1, 0.1)
             for i in range(len(mutated_genome)):
                 self.assertLess(mutated_genome[i][0], len(operations), "operation out of range after genome mutation")
                 self.assertLess(mutated_genome[i][1], i, "input out of range after genome mutation")
@@ -101,7 +101,7 @@ class TestGenome(unittest.TestCase):
 
         # checking if the mutation actually happened
         for i in range(100):
-            mutated_genome = mutate_individual(test_genome, 4, 1)
+            mutated_genome = mutate_individual(test_genome, 4, 1, 0.1)
             is_mutated = set(mutated_genome[0]) != set(gene0) or set(mutated_genome[1]) != set(gene1) or set(mutated_genome[2]) != set(gene2) or set(mutated_genome[3]) != set(gene3)
             self.assertTrue(is_mutated, f"mutated genome {mutated_genome} should not be the same as the original {test_genome}")
 
