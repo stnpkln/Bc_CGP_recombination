@@ -1,5 +1,5 @@
 from constants.operations import operations, op_inputs
-from utils import get_last_possible_input_index, get_number_of_gene_inputs
+from utils import get_active_gene_indexes, get_last_possible_input_index, get_number_of_gene_inputs, get_output_gene_indexes
 from typing import List
 import numpy as np
 
@@ -40,8 +40,10 @@ class Population:
         self.ncolumns = ncolumns
         self.population = self.get_starting_popultation(population_size)
         self.parent_index = 0
-        self.children_indexes = [i for i in range(1, population_size)]
+        self.children_indexes = [i for i in range(1, population_size)] # 1 becouse its only for children (minus parent with index 0)
         self.mutation_rate = mutation_rate
+        self.active_paths = [[] for i in range(population_size)]
+        self.reset_all_active_paths()
 
     def get_starting_popultation(self, population_size: int) -> List[List[List[int]]]:
         '''[summary]
@@ -157,6 +159,7 @@ class Population:
             raise ValueError("index must be >= 0")
 
         self.population[index] = individual
+        self.reset_active_path(index)
 
     def get_parent(self) -> List[List[int]]:
         '''[summary]
@@ -166,6 +169,9 @@ class Population:
             - parent genome
         '''
         return self.population[self.parent_index]
+    
+    def get_parent_with_active_path(self) -> tuple[List[List[int]], List[int]]:
+        return (self.get_parent(), self.get_active_path(self.parent_index))
     
     def set_parent(self, new_parent: List[List[int]]) -> None:
         '''[summary]
@@ -177,6 +183,7 @@ class Population:
         None
         '''
         self.population[self.parent_index] = new_parent
+        self.reset_active_path(self.parent_index)
     
     def get_children(self) -> List[List[List[int]]]:
         '''[summary]
@@ -188,6 +195,13 @@ class Population:
         children = []
         for child_index in self.children_indexes:
             children.append(self.population[child_index])
+        return children
+    
+    def get_children_with_active_paths(self) -> List[tuple[List[List[int]], List[int]]]:
+        children = []
+        for child_index in self.children_indexes:
+            children.append((self.population[child_index], self.active_paths[child_index]))
+
         return children
 
     def set_children(self, new_children: List[List[List[int]]]) -> None:
@@ -207,7 +221,9 @@ class Population:
             raise ValueError(f"Number of new_children is different than required, number of new_children:{len(new_children)}, required: {len(self.children_indexes)}")
 
         for i in range(len(new_children)):
-            self.population[self.children_indexes[i]] = new_children[i]
+            child_index = self.children_indexes[i]
+            self.population[child_index] = new_children[i]
+            self.reset_active_path(child_index)
         
     def get_ninputs(self) -> int:
         '''[summary]
@@ -235,3 +251,41 @@ class Population:
             - mutation rate
         '''
         return self.mutation_rate
+    
+    def calculate_active_path(self, individual_index: int):
+        '''[summary]
+        Returns active paths if given individual indexes
+        ### Parameters
+        1. individual_index: int
+            - index of individual to evaluate
+        ### Returns
+        List[int]
+            - indexes of active genes
+        '''
+        individual = self.population[individual_index]
+        output_gene_indexes = get_output_gene_indexes(individual)
+        active_gene_indexes = get_active_gene_indexes(individual, output_gene_indexes)
+        
+        return active_gene_indexes
+    
+    def get_active_path(self, individual_index: List) -> List[int]:
+        '''[summary]
+        Returns indexes of active genes int the given individual index
+        ### Parameters
+        1. individual_index
+            - index of the individual
+        ### Returns
+        List[int]
+            - indexes of active genes
+        '''
+        return self.active_paths[individual_index]
+    
+    def set_active_path(self, individual_index: int, active_path: List[int]) -> None:
+        self.active_paths[individual_index] = active_path
+
+    def reset_active_path(self, individual_index: int) -> None:
+        self.set_active_path(individual_index, self.calculate_active_path(individual_index))
+
+    def reset_all_active_paths(self) -> None:
+        for individual_index in range(len(self.population)):
+            self.reset_active_path(individual_index)

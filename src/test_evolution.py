@@ -5,6 +5,8 @@ from population import Population
 import unittest
 import numpy as np
 
+from utils import get_active_gene_indexes, get_output_gene_indexes
+
 test_genome_best_parent = [
     [-1, -1, -1], # 0
     [0, 0, 0], #    1
@@ -80,7 +82,7 @@ class TestEvolution(unittest.TestCase):
                max_generations=10000,
                mutation_rate=0.1)
 
-        solution_output = genome_output(solution, input)
+        solution_output = genome_output(solution, get_active_gene_indexes(solution, get_output_gene_indexes(solution)), input)
         # print("-------------------")
         # print("ONE INPUT INT")
         # print(f"fitness: {fitness}, generation: {generation}")
@@ -89,8 +91,8 @@ class TestEvolution(unittest.TestCase):
         # print(f"output of the solution: {solution_output}")
         # print("fitness evaluations: ", fitness_evaluations)
 
-        if fitness == 0.0:
-            self.assertListEqual(wanted_output.tolist(), solution_output.tolist(), "solution should be correct")
+        self.assertEqual(fitness, 0, "should find a solution for simple problems")
+        self.assertListEqual(wanted_output.tolist(), solution_output.tolist(), "solution should be correct")
 
     def test_evolve_one_input_float(self):
         def func(input: np.ndarray[np.ndarray[int | float]]) -> np.ndarray[int | float]:
@@ -110,7 +112,7 @@ class TestEvolution(unittest.TestCase):
                max_generations=1000,
                mutation_rate=0.1)
 
-        solution_output = genome_output(solution, input)
+        solution_output = genome_output(solution, get_active_gene_indexes(solution, get_output_gene_indexes(solution)), input)
         # print("-------------------")
         # print("ONE INPUT FLOAT")
         # print(f"fitness: {fitness}, generation: {generation}")
@@ -119,8 +121,8 @@ class TestEvolution(unittest.TestCase):
         # print(f"output of the solution: {solution_output}")
         # print("fitness evaluations: ", fitness_evaluations)
 
-        if fitness <= acceptable_boundary:
-            self.assertListEqual(np.round(wanted_output, 15).tolist(), np.round(solution_output, 15).tolist(), "solution should be correct")
+        self.assertLessEqual(fitness, acceptable_boundary, "should find a solution for simple problems")
+        self.assertListEqual(np.round(wanted_output, 15).tolist(), np.round(solution_output, 15).tolist(), "solution should be correct")
 
     def test_evolve_two_inputs_int(self):
         def func(input: np.ndarray[np.ndarray[int | float]]) -> np.ndarray[int | float]:
@@ -140,7 +142,7 @@ class TestEvolution(unittest.TestCase):
                mutation_rate=0.1)
         
 
-        solution_output = genome_output(solution, input)
+        solution_output = genome_output(solution, get_active_gene_indexes(solution, get_output_gene_indexes(solution)), input)
         # print("-------------------")
         # print("TWO INPUTS INT")
         # print(f"fitness: {fitness}, generation: {generation}")
@@ -149,8 +151,8 @@ class TestEvolution(unittest.TestCase):
         # print(f"output of the solution: {solution_output}")
         # print("fitness evaluations: ", fitness_evaluations)
 
-        if fitness == 0.0:
-            self.assertListEqual(wanted_output.tolist(), solution_output.tolist(), "solution should be correct")
+        self.assertEqual(fitness, 0, "should find a solution for simple problems")
+        self.assertListEqual(wanted_output.tolist(), solution_output.tolist(), "solution should be correct")
 
 if __name__ == '__main__':
     unittest.main()

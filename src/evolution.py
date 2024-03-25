@@ -116,14 +116,14 @@ def get_fittest_individual(population: Population, input_matrix: np.ndarray[np.n
     2. float
         - fitness of the fittest individual
     '''
-    parent = population.get_parent()
-    children = population.get_children()
+    parent, parent_active_path = population.get_parent_with_active_path()
+    children_with_active_paths = population.get_children_with_active_paths()
 
-    top_fitness = evaluate_fitness(parent, input_matrix, wanted_output)
+    top_fitness = evaluate_fitness(parent, parent_active_path, input_matrix, wanted_output)
     top_individual = parent
 
-    for child in children:
-        child_fitness = evaluate_fitness(child, input_matrix, wanted_output)
+    for child, child_active_path in children_with_active_paths:
+        child_fitness = evaluate_fitness(child, child_active_path, input_matrix, wanted_output)
         # comparing fitness, the best fitness is the lowest
         if (child_fitness <= top_fitness):
             top_fitness = child_fitness
