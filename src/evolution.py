@@ -1,10 +1,12 @@
 from population import Population
 
 from typing import List
-from genome import evaluate_fitness, mutate_individual
+from genome import evaluate_fitness, genome_output, mutate_individual
 import numpy as np
+from constants.functions import *
+from utils import get_active_gene_indexes, get_output_gene_indexes
 
-def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: np.ndarray[np.ndarray[int | float]], wanted_output: np.ndarray[float | int], acceptable_boundary: int, max_generations: int, mutation_rate: int) -> tuple[List[List[int]], float, int, int]:
+def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: np.ndarray[np.ndarray[int | float]], wanted_output: np.ndarray[float | int], acceptable_boundary: int, max_fitness_evaluations: int, mutation_rate: int) -> tuple[List[List[int]], float, int, int]:
     '''[summary]
     Runs the 1 + lambda evolutionary algorithm to find a genome that solves the given problem.
     ### Parameters
@@ -26,8 +28,8 @@ def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: np.nda
     6. acceptable_boundary: float
         - acceptable fitness value
         - must be >= 0
-    7. max_generations: int
-        - maximum number of generations to run the algorithm
+    7. max_fitness_evaluations: int
+        - maximum number of fitness evaluations to run the algorithm
         - must be >= 1
     8. mutation_rate: int
         - mutation rate of the algorithm
@@ -67,11 +69,12 @@ def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: np.nda
     population = Population(population_size, ncolumns, nrows, mutation_rate)
 
     fitness_evaluations = 0
-    for generation in range(1, max_generations + 1):
+    generation = 0
+    while(fitness_evaluations < max_fitness_evaluations):
         fitness_evaluations += population_size
         new_parent, fitness = get_fittest_individual(population, input_matrix, wanted_output)
 
-        # found an acceptable solution before max_generations was reached
+        # found an acceptable solution before max_fitness_evaluations was reached
         if fitness <= acceptable_boundary:
             break
 

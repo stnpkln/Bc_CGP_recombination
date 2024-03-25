@@ -170,6 +170,9 @@ def mutate_gene(gene: List[int], gene_index: int, ncolumns: int, nrows: int) -> 
 
         # if the gene was successfully mutated, stop the loop
         if original != mutated:
+            # in case the mutation is changing the operation, prepare the inputs for the new operation
+            if allele_to_mutate == 0:
+                format_inputs_for_new_operation(gene, gene_index, mutated, nrows)
             gene[allele_to_mutate] = mutated
             mutation_to_be_done = False
 
@@ -250,7 +253,7 @@ def exchange(receiver: List[List[int]], receiver_flags: List[bool], receiver_ind
             next_receiver_genes.append(receiver_gene[i])
             next_donor_genes.append(donor_gene[i])
     
-    format_inputs_for_new_operation(receiver, receiver_index, donor_gene[0], nrows)
+    format_inputs_for_new_operation(receiver[receiver_index], receiver_index, donor_gene[0], nrows)
     receiver_gene[0] = donor_gene[0]
     receiver_flags[receiver_index] = True
 
@@ -263,13 +266,13 @@ def exchange(receiver: List[List[int]], receiver_flags: List[bool], receiver_ind
                     exchange_rate=exchange_rate,
                     nrows=nrows)
 
-def format_inputs_for_new_operation(genome: List[List[int]], gene_index: List[int], new_operation: int, nrows: int) -> None:
+def format_inputs_for_new_operation(gene: List[int], gene_index: List[int], new_operation: int, nrows: int) -> None:
     '''[summary]
     Prepares the given gene for a change of operation allele, by changing the inputs to match the new operation.
     Shortened inputs are set to -1, if a new input is needed, it is set to a random (in bounds) value.
     ### Parameters
-    1. genome: List[List[int]]
-        - genome to prepare inputs for
+    1. gene: List[int]
+        - gene to prepare inputs for
     2. gene_index: List[int]
         - index of the gene to prepare in given genome
     3. operation: int
@@ -277,7 +280,6 @@ def format_inputs_for_new_operation(genome: List[List[int]], gene_index: List[in
     4. nrows: int
         - number of rows in the matrix of genes
     '''
-    gene = genome[gene_index]
     ncolumns = len(gene) / nrows
     operation_inputs = get_number_of_op_inputs(new_operation)
     for input_number in range(1, len(gene)):

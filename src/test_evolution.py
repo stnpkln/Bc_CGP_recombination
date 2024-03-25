@@ -79,7 +79,7 @@ class TestEvolution(unittest.TestCase):
                input_matrix=input,
                wanted_output=wanted_output,
                acceptable_boundary=0,
-               max_generations=10000,
+               max_fitness_evaluations=10000,
                mutation_rate=0.1)
 
         solution_output = genome_output(solution, get_active_gene_indexes(solution, get_output_gene_indexes(solution)), input)
@@ -109,7 +109,7 @@ class TestEvolution(unittest.TestCase):
                input_matrix=input,
                wanted_output=wanted_output,
                acceptable_boundary=acceptable_boundary,
-               max_generations=1000,
+               max_fitness_evaluations=10000,
                mutation_rate=0.1)
 
         solution_output = genome_output(solution, get_active_gene_indexes(solution, get_output_gene_indexes(solution)), input)
@@ -138,9 +138,8 @@ class TestEvolution(unittest.TestCase):
                input_matrix=input,
                wanted_output=wanted_output,
                acceptable_boundary=0,
-               max_generations=1000,
+               max_fitness_evaluations=10000,
                mutation_rate=0.1)
-        
 
         solution_output = genome_output(solution, get_active_gene_indexes(solution, get_output_gene_indexes(solution)), input)
         # print("-------------------")

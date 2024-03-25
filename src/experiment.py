@@ -1,14 +1,15 @@
 import pandas as pd
+from sklearn.metrics import mean_squared_error
 from constants.functions import *
 from evolution import evolve
 from timeit import default_timer as timer
+import multiprocessing
 
 from genome import genome_output
+from utils import get_active_gene_indexes, get_output_gene_indexes
 
-runs_per_function = 1
 acceptable_boundary = 1e-30
-max_generations = 100000
-data = pd.DataFrame(columns=['algorithm', 'function', 'fitness_evaluations', 'generations', 'best_fitness', 'time'])
+max_fitness_evaluations = 1e5
 def saveRun(algorithm: str, function: str, fitness_evaluations: int, generations: int, best_fitness: float, time: float) -> None:
 	'''[summary]
 	Saves the run data to a pandas DataFrame
@@ -28,20 +29,34 @@ def saveRun(algorithm: str, function: str, fitness_evaluations: int, generations
 	### Returns
 	None
 	'''
+	header = ['algorithm', 'function', 'fitness_evaluations', 'generations', 'best_fitness', 'time']
+	data = pd.DataFrame(columns=header)
 	data.loc[len(data)] = {'algorithm': algorithm, 'function': function, 'generations': generations, 'fitness_evaluations': fitness_evaluations, 'best_fitness': best_fitness, 'time': time}
+	with open('data.csv', 'a') as f:
+		data.to_csv(f, header=f.tell()==0)
 
 def runCGP(function: dict) -> None:
 	start = timer()
 
-	_, fitness, generations, fitness_evaluations = evolve(population_size=5, ncolumns=function['n_columns'], nrows=function['n_inputs'], input_matrix=function['input'], wanted_output=function['wanted_output'], acceptable_boundary=acceptable_boundary, max_generations=max_generations, mutation_rate=function['mutation_rate'])
-	
+	solution, fitness, generations, fitness_evaluations = evolve(population_size=5, ncolumns=function['n_columns'], nrows=function['n_inputs'], input_matrix=function['input'], wanted_output=function['wanted_output'], acceptable_boundary=acceptable_boundary, max_fitness_evaluations=max_fitness_evaluations, mutation_rate=function['mutation_rate'])
+
+	if fitness < acceptable_boundary:
+		solution_active_path = get_active_gene_indexes(solution, get_output_gene_indexes(solution))
+		solution_output = genome_output(solution, solution_active_path, function['input'])
+		recalculated_fitness = mean_squared_error(function['wanted_output'], solution_output)
+		if recalculated_fitness > acceptable_boundary:
+			print(f"recalculated fitness: {recalculated_fitness}")
+			print(f"original fitness: {fitness}")
+			print(f"found solution in {fitness_evaluations} fitness evaluations")
+			print(f"wanted output: {function['wanted_output']}")
+			print(f"found output: {solution_output}")
+			print(f"active path: {solution_active_path}")
+			print(f"genome: {solution}")
+			raise ValueError("recalculated fitness is not acceptable")
+
 	end = timer()
 	time = end - start
 	saveRun('1 + lambda', function['name'], fitness_evaluations, generations, fitness, time)
-
-def runFunction(function: dict) -> None:
-	for i in range(runs_per_function):
-		runCGP(function)
 
 def getCGPData() -> None:
 	'''[summary]
@@ -50,7 +65,7 @@ def getCGPData() -> None:
 	None
 	'''
 	for function in functions:
-		runFunction(functions[function])
+		run = multiprocessing.Process(target=runCGP, args=(functions[function],))
+		run.start()
 
 getCGPData()
-data.to_csv('data.csv')

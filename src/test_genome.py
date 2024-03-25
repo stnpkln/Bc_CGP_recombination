@@ -1,7 +1,7 @@
 from copy import deepcopy
 from genome import evaluate_fitness, format_inputs_for_new_operation, genome_output, mutate_gene, mutate_individual, active_gene_transplant, subgraph_exchange
 from utils import get_active_gene_indexes, get_output_gene_indexes
-from constants.operations import operations
+from constants.operations import operations, op_inputs
 
 import unittest
 import numpy as np
@@ -99,6 +99,21 @@ class TestGenome(unittest.TestCase):
             self.assertLess(gene[1], 3, "input out of range after gene mutation")
             self.assertLess(gene[2], 3, "input out of range after gene mutation")
 
+        target_checked = False
+        while not target_checked:
+            gene, success = mutate_gene([5, 0, -1], 5, 10, 1)
+            if (op_inputs[operations[gene[0]]] == 2):
+                self.assertNotEqual(gene[2], -1, "input out of range after gene mutation")
+                target_checked = True
+
+        target_checked = False
+        while not target_checked:
+            gene, success = mutate_gene([1, 0, 0], 5, 10, 1)
+            if (op_inputs[operations[gene[0]]] == 1):
+                self.assertEqual(gene[2], -1, "input out of range after gene mutation")
+                target_checked = True
+
+
 
     def test_mutate_individual(self):
         gene0 = [-1, -1, -1]
@@ -195,7 +210,7 @@ class TestGenome(unittest.TestCase):
         # should not change anything
         test_genome_formatting = [[-1, -1, -1], [0, 0, 0], [2, 0, 1], [-2, 2, -2]]
         original_genome = deepcopy(test_genome_formatting)
-        format_inputs_for_new_operation(genome=test_genome_formatting,
+        format_inputs_for_new_operation(gene=test_genome_formatting[2],
                                         gene_index=2,
                                         new_operation=0,
                                         nrows=1)
@@ -203,7 +218,7 @@ class TestGenome(unittest.TestCase):
 
         test_genome_formatting = [[-1, -1, -1], [0, 0, 0], [2, 0, 1], [-2, 2, -2]]
         original_genome = deepcopy(test_genome_formatting)
-        format_inputs_for_new_operation(genome=test_genome_formatting,
+        format_inputs_for_new_operation(gene=test_genome_formatting[2],
                                         gene_index=2,
                                         new_operation=1,
                                         nrows=1)
@@ -211,7 +226,7 @@ class TestGenome(unittest.TestCase):
 
         # should have one less input
         test_genome_formatting = [[-1, -1, -1], [0, 0, 0], [2, 0, 1], [-2, 2, -2]]
-        format_inputs_for_new_operation(genome=test_genome_formatting,
+        format_inputs_for_new_operation(gene=test_genome_formatting[2],
                                         gene_index=2,
                                         new_operation=4, # sin
                                         nrows=1)
@@ -219,7 +234,7 @@ class TestGenome(unittest.TestCase):
 
         # should have one more input
         test_genome_formatting = [[-1, -1, -1], [5, 0, -1], [-2, 2, -2]]
-        format_inputs_for_new_operation(genome=test_genome_formatting,
+        format_inputs_for_new_operation(gene=test_genome_formatting[1],
                                         gene_index=1,
                                         new_operation=2, # *
                                         nrows=1)
