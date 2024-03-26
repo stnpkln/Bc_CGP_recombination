@@ -1,16 +1,19 @@
+from typing import List
 import pandas as pd
 from sklearn.metrics import mean_squared_error
 from constants.functions import *
 from evolution import evolve
 from timeit import default_timer as timer
 import multiprocessing
+import uuid
 
 from genome import genome_output
 from utils import get_active_gene_indexes, get_output_gene_indexes
 
 acceptable_boundary = 1e-30
-max_fitness_evaluations = 1e5
-def saveRun(algorithm: str, function: str, fitness_evaluations: int, generations: int, best_fitness: float, time: float) -> None:
+max_fitness_evaluations = 1e3
+runs_per_function = 6
+def saveRun(algorithm: str, function: str, fitness_evaluations: int, generations: int, best_fitness: float, time: float, top_fitness_over_time: List[dict], run_id: str) -> None:
 	'''[summary]
 	Saves the run data to a pandas DataFrame
 	### Parameters
@@ -29,34 +32,48 @@ def saveRun(algorithm: str, function: str, fitness_evaluations: int, generations
 	### Returns
 	None
 	'''
-	header = ['algorithm', 'function', 'fitness_evaluations', 'generations', 'best_fitness', 'time']
-	data = pd.DataFrame(columns=header)
-	data.loc[len(data)] = {'algorithm': algorithm, 'function': function, 'generations': generations, 'fitness_evaluations': fitness_evaluations, 'best_fitness': best_fitness, 'time': time}
-	with open('data.csv', 'a') as f:
-		data.to_csv(f, header=f.tell()==0)
+	general_header = ['run_id', 'algorithm', 'function', 'fitness_evaluations', 'generations', 'best_fitness', 'time']
+	general_data = pd.DataFrame(columns=general_header)
+	general_data.loc[len(general_data)] = {'run_id': run_id, 'algorithm': algorithm, 'function': function, 'generations': generations, 'fitness_evaluations': fitness_evaluations, 'best_fitness': best_fitness, 'time': time}
+	with open('data-general.csv', 'a') as f:
+		general_data.to_csv(f, header=False, index=False)
+
+	run_details_header = ['run_id', 'generation', 'fitness']
+	run_details = pd.DataFrame(columns=run_details_header, data=top_fitness_over_time)
+	run_details['run_id'] = run_id
+	with open('data-run-details.csv', 'a') as f:
+		run_details.to_csv(f, header=False, index=False)
 
 def runCGP(function: dict) -> None:
+	run_id = uuid.uuid4()
+	seed = int(run_id) % 2**32 -1
 	start = timer()
 
-	solution, fitness, generations, fitness_evaluations = evolve(population_size=5, ncolumns=function['n_columns'], nrows=function['n_inputs'], input_matrix=function['input'], wanted_output=function['wanted_output'], acceptable_boundary=acceptable_boundary, max_fitness_evaluations=max_fitness_evaluations, mutation_rate=function['mutation_rate'])
+	solution, fitness, generations, fitness_evaluations, top_fitness_over_time = evolve(population_size=5,
+																					 ncolumns=function['n_columns'],
+																					 nrows=function['n_inputs'],
+																					 input_matrix=function['input'],
+																					 wanted_output=function['wanted_output'],
+																					 acceptable_boundary=acceptable_boundary,
+																					 max_fitness_evaluations=max_fitness_evaluations,
+																					 mutation_rate=function['mutation_rate'],
+																					 seed=seed)
 
 	if fitness < acceptable_boundary:
 		solution_active_path = get_active_gene_indexes(solution, get_output_gene_indexes(solution))
 		solution_output = genome_output(solution, solution_active_path, function['input'])
 		recalculated_fitness = mean_squared_error(function['wanted_output'], solution_output)
 		if recalculated_fitness > acceptable_boundary:
-			print(f"recalculated fitness: {recalculated_fitness}")
-			print(f"original fitness: {fitness}")
-			print(f"found solution in {fitness_evaluations} fitness evaluations")
-			print(f"wanted output: {function['wanted_output']}")
-			print(f"found output: {solution_output}")
-			print(f"active path: {solution_active_path}")
-			print(f"genome: {solution}")
 			raise ValueError("recalculated fitness is not acceptable")
 
 	end = timer()
 	time = end - start
-	saveRun('1 + lambda', function['name'], fitness_evaluations, generations, fitness, time)
+	saveRun('1 + lambda', function['name'], fitness_evaluations, generations, fitness, time, top_fitness_over_time, str(run_id))
+
+def runFunction(function: dict) -> None:
+	for _ in range(runs_per_function):
+		run = multiprocessing.Process(target=runCGP, args=(functions[function],))
+		run.start()
 
 def getCGPData() -> None:
 	'''[summary]
@@ -65,7 +82,6 @@ def getCGPData() -> None:
 	None
 	'''
 	for function in functions:
-		run = multiprocessing.Process(target=runCGP, args=(functions[function],))
-		run.start()
+		runFunction(function)
 
 getCGPData()

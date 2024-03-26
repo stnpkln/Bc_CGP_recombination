@@ -420,3 +420,25 @@ Pozn. 2: Jeste jeden rozdíl, u mého algorytmu se začíná na stejném indexu,
 - Nevýhoda: implementace algorytmu s pravděpodobností může žrát více výpočetního času, než je jeho přínos... i kdyz mozna ani ne, kdyz se stejne nahodne vybiraji mista krizeni apod.
 
 ![Alt text](Algorithm2.svg)
+
+# Bakalářka - písemná část
+## Nadpisy
+1. úvod
+2. abstrakt
+3. Evoluční algorytmy
+  1. úvod
+  2. Symbolicka regrese
+4. Kartézské genetické programování
+  1. úvod
+  2. křížení - i existujici reseni
+5. Návrh
+
+6. implementace
+
+7. Experimentace
+
+8. závěr
+
+ukladat fitness a generaci pokazde kdyz se najde lelpsi reseni
+
+metacentrum

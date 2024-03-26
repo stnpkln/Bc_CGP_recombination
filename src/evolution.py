@@ -6,7 +6,15 @@ import numpy as np
 from constants.functions import *
 from utils import get_active_gene_indexes, get_output_gene_indexes
 
-def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: np.ndarray[np.ndarray[int | float]], wanted_output: np.ndarray[float | int], acceptable_boundary: int, max_fitness_evaluations: int, mutation_rate: int) -> tuple[List[List[int]], float, int, int]:
+def evolve(population_size: int,
+           ncolumns: int,
+           nrows: int,
+           input_matrix: np.ndarray[np.ndarray[int | float]],
+           wanted_output: np.ndarray[float | int],
+           acceptable_boundary: int,
+           max_fitness_evaluations: int,
+           mutation_rate: int,
+           seed: int) -> tuple[List[List[int]], float, int, int, List[dict]]:
     '''[summary]
     Runs the 1 + lambda evolutionary algorithm to find a genome that solves the given problem.
     ### Parameters
@@ -34,6 +42,8 @@ def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: np.nda
     8. mutation_rate: int
         - mutation rate of the algorithm
         - must be >= 0 and <= 1
+    9. seed: int
+        - seed for the random number generator
     ### Returns
     1. List[List[int]]
         - best individual found
@@ -43,6 +53,9 @@ def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: np.nda
         - number of generations the algorithm ran
     4. int
         - number of fitness evaluations the algorithm ran
+    5. List[dict]
+        - list of dictionaries containing the top fitness and generation at each generation
+        - [{"fitness": float, "generation": int}]
     Raises
     ------
     ValueError
@@ -65,14 +78,23 @@ def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: np.nda
         raise ValueError("acceptable_boundary must be >= 0")
     if mutation_rate < 0 or mutation_rate > 1:
         raise ValueError("mutation_rate must be >= 0 and <= 1")
+    
+    np.random.seed(seed)
 
     population = Population(population_size, ncolumns, nrows, mutation_rate)
 
     fitness_evaluations = 0
     generation = 0
+    top_fitness = np.inf
+    top_fitness_over_time = []
     while(fitness_evaluations < max_fitness_evaluations):
         fitness_evaluations += population_size
+        generation += 1
         new_parent, fitness = get_fittest_individual(population, input_matrix, wanted_output)
+        if fitness < top_fitness:
+            top_fitness = fitness
+            top_fitness_over_time.append({"fitness": top_fitness, "generation": generation})
+
 
         # found an acceptable solution before max_fitness_evaluations was reached
         if fitness <= acceptable_boundary:
@@ -80,7 +102,7 @@ def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: np.nda
 
         generate_new_population(new_parent, population)
     
-    return new_parent, fitness, generation, fitness_evaluations
+    return new_parent, fitness, generation, fitness_evaluations, top_fitness_over_time
 
 def generate_new_population(new_parent: List[List[int]], population: Population) -> None:
     '''[summary]
