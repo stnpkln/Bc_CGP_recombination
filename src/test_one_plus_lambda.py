@@ -1,5 +1,6 @@
-from evolution import evolve, generate_new_population, get_fittest_individual
+from evolution import evolve
 from genome import genome_output
+from one_plus_lambda import generate_new_population, get_fittest_individual
 from population import Population
 
 import unittest
@@ -35,7 +36,7 @@ test_genome_bad = [
     [-2, 0, -2] #   3
 ] # x
 
-class TestEvolution(unittest.TestCase):
+class TestOnePlusLambda(unittest.TestCase):
 
     def test_get_fittest_individual(self):
         def func(input: np.ndarray[int | float]) -> np.ndarray[int | float]:
@@ -73,13 +74,13 @@ class TestEvolution(unittest.TestCase):
 
         input = np.array([np.arange(1, 11, 1, dtype=int)])
         wanted_output = func(input)
-        solution, fitness, generation, fitness_evaluations = evolve(population_size=10,
+        solution, fitness, *_ = evolve(population_size=10,
                ncolumns=10,
                nrows=1,
                input_matrix=input,
                wanted_output=wanted_output,
                acceptable_boundary=0,
-               max_fitness_evaluations=10000,
+               max_fitness_evaluations=100000,
                mutation_rate=0.1)
 
         solution_output = genome_output(solution, get_active_gene_indexes(solution, get_output_gene_indexes(solution)), input)
@@ -103,13 +104,13 @@ class TestEvolution(unittest.TestCase):
 
         wanted_output = func(input)
         acceptable_boundary = 1e-31
-        solution, fitness, generation, fitness_evaluations = evolve(population_size=10,
+        solution, fitness, *_  = evolve(population_size=10,
                ncolumns=10,
                nrows=1,
                input_matrix=input,
                wanted_output=wanted_output,
                acceptable_boundary=acceptable_boundary,
-               max_fitness_evaluations=10000,
+               max_fitness_evaluations=100000,
                mutation_rate=0.1)
 
         solution_output = genome_output(solution, get_active_gene_indexes(solution, get_output_gene_indexes(solution)), input)
@@ -132,13 +133,13 @@ class TestEvolution(unittest.TestCase):
 
         input = np.array([np.arange(1, 11, 1, dtype=int), np.arange(2, 22, 2, dtype=int)])
         wanted_output = func(input)
-        solution, fitness, generation, fitness_evaluations = evolve(population_size=10,
+        solution, fitness, *_ = evolve(population_size=10,
                ncolumns=10,
                nrows=2,
                input_matrix=input,
                wanted_output=wanted_output,
                acceptable_boundary=0,
-               max_fitness_evaluations=10000,
+               max_fitness_evaluations=100000,
                mutation_rate=0.1)
 
         solution_output = genome_output(solution, get_active_gene_indexes(solution, get_output_gene_indexes(solution)), input)

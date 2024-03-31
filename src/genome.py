@@ -178,7 +178,7 @@ def mutate_gene(gene: List[int], gene_index: int, ncolumns: int, nrows: int) -> 
 
     return gene, True
 
-def active_gene_transplant(receiver: List[List[int]], receiver_active_path: List[int], donor: List[List[int]], donor_active_path: List[int], exchange_rate: float) -> List[List[int]]:
+def active_gene_transplant(receiver: List[List[int]], receiver_active_path: List[int], donor: List[List[int]], donor_active_path: List[int], exchange_rate: float, nrows = 1) -> List[List[int]]:
     '''[summary]
     Returns child genome from two parent genomes using recombination 1
     ### Parameters

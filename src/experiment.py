@@ -1,6 +1,7 @@
 from typing import List
 import pandas as pd
 from sklearn.metrics import mean_squared_error
+from constants.algorithmEnum import AlgorithmEnum
 from constants.functions import *
 from evolution import evolve
 from timeit import default_timer as timer
@@ -57,7 +58,8 @@ def runCGP(function: dict) -> None:
 																					 acceptable_boundary=acceptable_boundary,
 																					 max_fitness_evaluations=max_fitness_evaluations,
 																					 mutation_rate=function['mutation_rate'],
-																					 seed=seed)
+																					 seed=seed,
+																					 algorithm=AlgorithmEnum.MUTATION_ONLY)
 
 	if fitness < acceptable_boundary:
 		solution_active_path = get_active_gene_indexes(solution, get_output_gene_indexes(solution))

@@ -4,7 +4,7 @@ from typing import List
 import numpy as np
 
 class Population:
-    def __init__(self, population_size: int, ncolumns: int, nrows: int, mutation_rate) -> None:
+    def __init__(self, population_size: int, ncolumns: int, nrows: int, mutation_rate: float, nparents: int = 1) -> None:
         '''[summary]
         Initializes the population with random genomes.
         ### Parameters
@@ -39,8 +39,8 @@ class Population:
         self.nrows = nrows
         self.ncolumns = ncolumns
         self.population = self.get_starting_popultation(population_size)
-        self.parent_index = 0
-        self.children_indexes = [i for i in range(1, population_size)] # 1 becouse its only for children (minus parent with index 0)
+        self.nparents = nparents
+        self.children_indexes = [i for i in range(nparents, population_size)] # 1 becouse its only for children (minus parent with index 0)
         self.mutation_rate = mutation_rate
         self.active_paths = [[] for i in range(population_size)]
         self.reset_all_active_paths()
@@ -161,19 +161,22 @@ class Population:
         self.population[index] = individual
         self.reset_active_path(index)
 
-    def get_parent(self) -> List[List[int]]:
+    def get_parent(self, parent_index = 0) -> List[List[int]]:
         '''[summary]
         Returns the parent of the population.
         ### Returns
         List[List[int]]
             - parent genome
         '''
-        return self.population[self.parent_index]
+        if parent_index >= self.nparents:
+            raise ValueError("Parent index out of range")
+
+        return self.population[parent_index]
     
-    def get_parent_with_active_path(self) -> tuple[List[List[int]], List[int]]:
-        return (self.get_parent(), self.get_active_path(self.parent_index))
+    def get_parent_with_active_path(self, parent_index = 0) -> tuple[List[List[int]], List[int]]:
+        return (self.get_parent(), self.get_active_path(parent_index))
     
-    def set_parent(self, new_parent: List[List[int]]) -> None:
+    def set_parent(self, new_parent: List[List[int]], parent_index = 0) -> None:
         '''[summary]
         Sets the parent of the population.
         ### Parameters
@@ -182,8 +185,11 @@ class Population:
         ### Returns
         None
         '''
-        self.population[self.parent_index] = new_parent
-        self.reset_active_path(self.parent_index)
+        if parent_index >= self.nparents:
+            raise ValueError("Parent index out of range")
+    
+        self.population[parent_index] = new_parent
+        self.reset_active_path(parent_index)
     
     def get_children(self) -> List[List[List[int]]]:
         '''[summary]
@@ -289,3 +295,6 @@ class Population:
     def reset_all_active_paths(self) -> None:
         for individual_index in range(len(self.population)):
             self.reset_active_path(individual_index)
+
+    def get_individual_with_active_path(self, individual_index) -> tuple[List[List[int]], List[int]]:
+        return (self.get_individual(individual_index), self.get_active_path(individual_index))
