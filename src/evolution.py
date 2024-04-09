@@ -1,10 +1,23 @@
-from population import Population
+from one_plus_lambda import one_plus_lambda
 
 from typing import List
-from genome import evaluate_fitness, mutate_individual
+from genome import active_gene_transplant, subgraph_exchange
 import numpy as np
+from constants.functions import *
+from tournament_selection import tournament_selection
+from constants.algorithmEnum import AlgorithmEnum
 
-def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: np.ndarray[np.ndarray[int | float]], wanted_output: np.ndarray[float | int], acceptable_boundary: int, max_generations: int, mutation_rate: int) -> tuple[List[List[int]], float, int, int]:
+def evolve(population_size: int,
+           ncolumns: int,
+           nrows: int,
+           input_matrix: np.ndarray[np.ndarray[int | float]],
+           wanted_output: np.ndarray[float | int],
+           acceptable_boundary: int,
+           max_fitness_evaluations: int,
+           mutation_rate: float,
+           seed: int | None = None,
+           algorithm: AlgorithmEnum = AlgorithmEnum.MUTATION_ONLY,
+           exchange_rate: float = 0.5) -> tuple[List[List[int]], float, int, int, List[dict]]:
     '''[summary]
     Runs the 1 + lambda evolutionary algorithm to find a genome that solves the given problem.
     ### Parameters
@@ -26,12 +39,21 @@ def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: np.nda
     6. acceptable_boundary: float
         - acceptable fitness value
         - must be >= 0
-    7. max_generations: int
-        - maximum number of generations to run the algorithm
+    7. max_fitness_evaluations: int
+        - maximum number of fitness evaluations to run the algorithm
         - must be >= 1
-    8. mutation_rate: int
+    8. mutation_rate: float
         - mutation rate of the algorithm
         - must be >= 0 and <= 1
+    9. seed: int
+        - seed for the random number generator
+        - default None
+    10. algorithm: AlgorithmEnum
+        - algorithm to be run
+        - default MUTATION_ONLY
+    11. exchange_rate: float
+        - exchange rate of the algorithm
+        - default 0.5
     ### Returns
     1. List[List[int]]
         - best individual found
@@ -41,6 +63,9 @@ def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: np.nda
         - number of generations the algorithm ran
     4. int
         - number of fitness evaluations the algorithm ran
+    5. List[dict]
+        - list of dictionaries containing the top fitness and generation at each generation
+        - [{"fitness": float, "generation": int}]
     Raises
     ------
     ValueError
@@ -63,70 +88,40 @@ def evolve(population_size: int, ncolumns: int, nrows: int, input_matrix: np.nda
         raise ValueError("acceptable_boundary must be >= 0")
     if mutation_rate < 0 or mutation_rate > 1:
         raise ValueError("mutation_rate must be >= 0 and <= 1")
-
-    population = Population(population_size, ncolumns, nrows, mutation_rate)
-
-    fitness_evaluations = 0
-    for generation in range(1, max_generations + 1):
-        fitness_evaluations += population_size
-        new_parent, fitness = get_fittest_individual(population, input_matrix, wanted_output)
-
-        # found an acceptable solution before max_generations was reached
-        if fitness <= acceptable_boundary:
-            break
-
-        generate_new_population(new_parent, population)
     
-    return new_parent, fitness, generation, fitness_evaluations
+    if (seed):
+        np.random.seed(seed)
 
-def generate_new_population(new_parent: List[List[int]], population: Population) -> None:
-    '''[summary]
-    Generates new children from the given parent and sets them to the population.
-    ### Parameters
-    1. new_parent: List[List[int]]
-        - parent genome
-    2. population: Population
-        - population to set the children to
-    ### Returns
-    None
-    '''
-    n_children = len(population.children_indexes) # number of thildren to generate
-    new_children = []
-
-    for i in range(n_children):
-        new_child = mutate_individual(new_parent, population.ncolumns, population.nrows, population.mutation_rate)
-        new_children.append(new_child)
-
-    population.set_children(new_children)
-    population.set_parent(new_parent)
-
-def get_fittest_individual(population: Population, input_matrix: np.ndarray[np.ndarray[int | float]], wanted_output: np.ndarray[float | int]) -> tuple[List[List[int]], float]:
-    '''[summary]
-    Returns the fittest individual from the given population.
-    ### Parameters
-    1. population: Population
-        - population to get the fittest individual from
-    2. input_matrix: np.ndarray[np.ndarray[int | float]]
-        - input_matrix data for the function
-    3. wanted_output: np.ndarray[float | int]
-        - expected output of the function
-    ### Returns
-    1. List[List[int]]
-        - fittest individual
-    2. float
-        - fitness of the fittest individual
-    '''
-    parent = population.get_parent()
-    children = population.get_children()
-
-    top_fitness = evaluate_fitness(parent, input_matrix, wanted_output)
-    top_individual = parent
-
-    for child in children:
-        child_fitness = evaluate_fitness(child, input_matrix, wanted_output)
-        # comparing fitness, the best fitness is the lowest
-        if (child_fitness <= top_fitness):
-            top_fitness = child_fitness
-            top_individual = child
-
-    return top_individual, top_fitness
+    if (algorithm == AlgorithmEnum.MUTATION_ONLY):
+        return one_plus_lambda(population_size,
+                        ncolumns,
+                        nrows,
+                        input_matrix,
+                        wanted_output,
+                        acceptable_boundary,
+                        max_fitness_evaluations,
+                        mutation_rate)
+    elif (algorithm == AlgorithmEnum.SUBGRAPH_EXCHANGE):
+        return tournament_selection(population_size,
+                        ncolumns,
+                        nrows,
+                        input_matrix,
+                        wanted_output,
+                        acceptable_boundary,
+                        max_fitness_evaluations,
+                        mutation_rate,
+                        exchange_rate,
+                        exchange_function=subgraph_exchange)
+    elif (algorithm ==  AlgorithmEnum.PASSIVE_ACTIVE_IMPLANTATION):
+                return tournament_selection(population_size,
+                        ncolumns,
+                        nrows,
+                        input_matrix,
+                        wanted_output,
+                        acceptable_boundary,
+                        max_fitness_evaluations,
+                        mutation_rate,
+                        exchange_rate,
+                        exchange_function=active_gene_transplant)
+    else:
+        raise ValueError("Unknown algorithm type")

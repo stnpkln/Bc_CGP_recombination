@@ -420,3 +420,70 @@ Pozn. 2: Jeste jeden rozdíl, u mého algorytmu se začíná na stejném indexu,
 - Nevýhoda: implementace algorytmu s pravděpodobností může žrát více výpočetního času, než je jeho přínos... i kdyz mozna ani ne, kdyz se stejne nahodne vybiraji mista krizeni apod.
 
 ![Alt text](Algorithm2.svg)
+
+# Bakalářka - písemná část
+## Nadpisy
+1. úvod
+2. abstrakt
+3. Evoluční algorytmy
+  - úvod 
+    - definice, neco s evolucí
+    - historie
+  1. pojmy
+    - gen
+    - genotyp
+    - chromozom
+    - jedinec
+    - populace
+      - obrazek - gen, genotyp, chromozom, jedinec, populace (binarni retezce)
+    - mutace
+    - rekombinace
+      - obrazek (binarni retezce)
+    - genotyp
+    - fenotyp
+    - fitness
+    - selekce
+      - definice
+      - turnaj
+        - obrazek
+    - generace
+  2. genetické programování
+    - uvod
+    - definice
+    - rozdily
+  3. Symbolická regrese
+    - co to je symbolická regrese (GP koza)
+    - booleovske funkce jako speciální případ symbolické regrese
+4. Kartézské genetické programování
+  - historie
+  - definice
+  - 1 + lambda
+  1. problematika krizeni
+  2. neci algoritmus
+  3. neci algoritmus
+  .
+  .
+  .
+5. Návrh
+  - uvod
+  1. algoritmus 1
+    - inspirace
+    - popis
+    - obrázek
+    - myslenka za algoritmem
+  2. algoritmus 2
+    - inspirace
+    - popis
+    - obrázek
+    - myslenka za algoritmem
+6. implementace
+  - uvod...
+  - doplnit az bude treba
+
+7. Experimentace
+
+8. závěr
+
+ukladat fitness a generaci pokazde kdyz se najde lelpsi reseni
+
+metacentrum

@@ -2,7 +2,7 @@
 from constants.operations import operations, op_inputs
 
 from typing import List
-
+import random
 
 def get_last_possible_input_index(ncolumns: int, nrows: int, gene_index: int) -> int:
     '''[summary]
@@ -81,3 +81,73 @@ def get_output_gene_indexes(genome: List[List[int]]) -> List[int]:
         - list of indexes of output genes in genome
     '''
     return [i for i in range(len(genome)) if genome[i][0] == -2] # TODO may be optimized (last column of the genome matrix)
+
+
+def get_active_gene_indexes(genome: List[List[int]], output_gene_indexes: List[int]) -> List[int]:
+    '''[summary]
+    Returns indexes of active genes in genome
+    ### Parameters
+    1. genome: List[List[int]]
+        - genome to search active genes in
+    2. output_gene_indexes: List[int]
+        - list of indexes of output genes
+
+    ### Returns
+    List[int]
+        - list of indexes of active genes in genome
+    '''
+    active_genes_indexes = []
+    added_to_active_flag = [False] * len(genome) # flag for each gene if it was added to active genes
+
+    found_new_gene = True
+    gene_indexes_to_search = output_gene_indexes.copy()
+    while (found_new_gene):
+        new_indexes_to_search = []
+        for gene_index_to_search in gene_indexes_to_search:
+            gene = genome[gene_index_to_search]
+            gene_operation = gene[0]
+
+            # in case of input gene, skip it
+            if (gene_operation == -1):
+                continue
+
+            # add the gene we are working with to active genes
+            active_genes_indexes.append(gene_index_to_search)
+
+            # in case of output gene, save it to active genes, and continue
+            if (gene_operation == -2):
+                input_gene_index = gene[1]
+                if (not added_to_active_flag[input_gene_index]):
+                    # mark the input of this gene as active, and add it to active genes
+                    added_to_active_flag[input_gene_index] = True
+                    new_indexes_to_search.append(input_gene_index)
+                continue
+
+            # function genes
+            for i in range(1, 1 + op_inputs[operations[gene_operation]]): # for each input that the operation of this gene has
+                input_gene_index = gene[i] # in case of output gene, use only the first input
+                if (not added_to_active_flag[input_gene_index]):
+                    # mark the input of this gene as active, and add it to genes to search next
+                    added_to_active_flag[input_gene_index] = True
+                    new_indexes_to_search.append(input_gene_index)
+
+        found_new_gene = len(new_indexes_to_search) != 0 # if there are no new genes to search, stop the loop
+        gene_indexes_to_search = new_indexes_to_search # reassign the genes to search
+
+    return active_genes_indexes
+
+def random_bool(chance: float):
+    return random.uniform(0, 1) < chance
+
+def get_number_of_gene_inputs(gene: List[int]) -> int:
+    return get_number_of_op_inputs(gene[0])
+
+def get_number_of_op_inputs(op: int) -> int:
+    return op_inputs[operations[op]]
+
+def is_input_gene(gene: List[int]) -> bool:
+    return gene[0] == -1
+
+def is_output_gene(gene: List[int]) -> bool:
+    return gene[0] == -2
+
