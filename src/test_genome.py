@@ -1,3 +1,4 @@
+from __future__ import annotations
 from copy import deepcopy
 from genome import evaluate_fitness, format_inputs_for_new_operation, genome_output, mutate_gene, mutate_individual, active_gene_transplant, subgraph_exchange
 from utils import get_active_gene_indexes, get_output_gene_indexes

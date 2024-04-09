@@ -1,3 +1,4 @@
+from __future__ import annotations
 from utils import get_active_gene_indexes, get_genome_column, get_last_possible_input_index, get_number_of_gene_inputs, get_output_gene_indexes
 
 import unittest

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import List
 import pandas as pd
 from sklearn.metrics import mean_squared_error
@@ -13,7 +14,7 @@ from utils import get_active_gene_indexes, get_output_gene_indexes
 
 acceptable_boundary = 1e-30
 max_fitness_evaluations = 1e3
-runs_per_function = 6
+runs_per_function = 10
 single_function_runs = False
 function_to_run = ""
 def saveRun(algorithm: str, function: str, fitness_evaluations: int, generations: int, best_fitness: float, time: float, top_fitness_over_time: List[dict], run_id: str) -> None:
@@ -81,6 +82,9 @@ def runFunction(function_key: str) -> None:
 		for _ in range(runs_per_function):
 			run = multiprocessing.Process(target=runCGP, args=(functions[function_key], algorithm,))
 			run.start()
+
+	for run in multiprocessing.active_children():
+		run.join()
 
 def getCGPData() -> None:
 	'''[summary]

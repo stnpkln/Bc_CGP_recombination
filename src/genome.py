@@ -1,3 +1,4 @@
+from __future__ import annotations
 from constants.operations import operations, op_inputs, op_functions
 from utils import get_last_possible_input_index, get_number_of_op_inputs, is_input_gene, is_output_gene, random_bool
 from typing import List

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Callable, List
 
 import numpy as np
@@ -25,11 +26,11 @@ def tournament_selection(population_size: int,
     top_fitness_over_time = []
     while(fitness_evaluations < max_fitness_evaluations):
         generation += 1
+        fitness_evaluations += population_size - 2
 
         new_parent1, new_parent2, new_parent1_fitness, new_parent2_fitness = tournament(population, population_size, exchange_rate, exchange_function)
         fitness = new_parent1_fitness if new_parent1_fitness < new_parent2_fitness else new_parent2_fitness
         top_individual = new_parent1 if new_parent1_fitness < new_parent2_fitness else new_parent2
-        fitness_evaluations += population.fitness_evaluations
 
         if fitness < top_fitness:
             top_fitness = fitness

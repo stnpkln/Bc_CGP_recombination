@@ -1,3 +1,4 @@
+from __future__ import annotations
 from one_plus_lambda import one_plus_lambda
 
 from typing import List

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import numpy as np
 
 training_set_1 = np.array([np.linspace(-1, 1, 20, dtype=float)])

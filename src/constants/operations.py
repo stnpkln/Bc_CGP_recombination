@@ -1,6 +1,5 @@
-import math
+from __future__ import annotations
 import numpy as np
-import uuid
 
 operations = ['+', '-', '*', '%', 'sin', 'cos', 'e^n']
 op_inputs = {

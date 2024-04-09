@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import List
 
 import numpy as np
@@ -22,6 +23,7 @@ def one_plus_lambda(population_size: int,
     top_fitness_over_time = []
     while(fitness_evaluations < max_fitness_evaluations):
         generation += 1
+        fitness_evaluations += population_size - 1
         new_parent_index, fitness = get_fittest_individual_index(population)
         if fitness < top_fitness:
             top_fitness = fitness
@@ -32,7 +34,6 @@ def one_plus_lambda(population_size: int,
             break
 
         generate_new_population(new_parent_index, population)
-        fitness_evaluations += population.fitness_evaluations
     
     top_individual = population.get_individual(new_parent_index)
     return top_individual, fitness, generation, fitness_evaluations, top_fitness_over_time

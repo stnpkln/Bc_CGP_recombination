@@ -1,3 +1,4 @@
+from __future__ import annotations
 from constants.algorithmEnum import AlgorithmEnum
 from evolution import evolve
 from genome import genome_output, subgraph_exchange

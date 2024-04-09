@@ -1,3 +1,4 @@
+from __future__ import annotations
 from constants.operations import operations, op_inputs
 from genome import evaluate_fitness
 from utils import get_active_gene_indexes, get_last_possible_input_index, get_number_of_gene_inputs, get_output_gene_indexes
@@ -48,7 +49,6 @@ class Population:
         self.input_matrix = input_matrix
         self.wanted_output = wanted_output
         self.population_size = population_size
-        self.fitness_evaluations = 0
         self.reset_all_active_paths()
         self.calculate_fitness_all()
 
@@ -345,7 +345,6 @@ class Population:
         '''
         individual, active_path = self.get_individual_with_active_path(individual_index)
         self.set_fitness(individual_index, evaluate_fitness(individual, active_path, self.input_matrix, self.wanted_output))
-        self.fitness_evaluations += 1
 
     def calculate_fitness_all(self) -> None:
         '''[summary]

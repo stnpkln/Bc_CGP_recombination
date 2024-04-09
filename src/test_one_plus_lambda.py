@@ -1,3 +1,4 @@
+from __future__ import annotations
 from evolution import evolve
 from genome import genome_output
 from one_plus_lambda import generate_new_population, get_fittest_individual_index
