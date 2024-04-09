@@ -17,19 +17,19 @@ def tournament_selection(population_size: int,
                         exchange_rate: int,
                         exchange_function: Callable) -> tuple[List[List[int]], float, int, int, List[dict]]:
 
-    population = Population(population_size, ncolumns, nrows, mutation_rate, nparents=2)
+    population = Population(population_size, ncolumns, nrows, mutation_rate, input_matrix=input_matrix, wanted_output=wanted_output, nparents=2)
 
     fitness_evaluations = 0
     generation = 0
     top_fitness = np.inf
     top_fitness_over_time = []
     while(fitness_evaluations < max_fitness_evaluations):
-        fitness_evaluations += population_size
         generation += 1
 
-        new_parent1, new_parent2, new_parent1_fitness, new_parent2_fitness = tournament(population, input_matrix, wanted_output, population_size, exchange_rate, exchange_function)
+        new_parent1, new_parent2, new_parent1_fitness, new_parent2_fitness = tournament(population, population_size, exchange_rate, exchange_function)
         fitness = new_parent1_fitness if new_parent1_fitness < new_parent2_fitness else new_parent2_fitness
         top_individual = new_parent1 if new_parent1_fitness < new_parent2_fitness else new_parent2
+        fitness_evaluations += population.fitness_evaluations
 
         if fitness < top_fitness:
             top_fitness = fitness
@@ -41,15 +41,15 @@ def tournament_selection(population_size: int,
 
     return top_individual, fitness, generation, fitness_evaluations, top_fitness_over_time
     
-def tournament(population: Population, input_matrix: np.ndarray[np.ndarray[int | float]], wanted_output: np.ndarray[int | float], population_size: int, exchange_rate: float, exchange_function: Callable) -> tuple[List[List[int]], List[List[int]], float, float]:
+def tournament(population: Population, population_size: int, exchange_rate: float, exchange_function: Callable) -> tuple[List[List[int]], List[List[int]], float, float]:
     individual_indexes_shuffled = [individual_index for individual_index in range(population_size)]
     np.random.shuffle(individual_indexes_shuffled)
 
     group1 = individual_indexes_shuffled[2:]
     group2 = individual_indexes_shuffled[:2]
     
-    parent_1_index, parent_1_fitness = get_best_group_individual(group1, population, input_matrix, wanted_output)
-    parent_2_index, parent_2_fitness = get_best_group_individual(group2, population, input_matrix, wanted_output)
+    parent_1_index, parent_1_fitness = get_best_group_individual(group1, population)
+    parent_2_index, parent_2_fitness = get_best_group_individual(group2, population)
     parent_1 = population.get_individual(parent_1_index)
     parent_2 = population.get_individual(parent_2_index)
 
@@ -57,13 +57,12 @@ def tournament(population: Population, input_matrix: np.ndarray[np.ndarray[int |
 
     return parent_1, parent_2, parent_1_fitness, parent_2_fitness
 
-def get_best_group_individual(group: List[int], population: Population, input_matrix: np.ndarray[np.ndarray[int | float]], wanted_output: np.ndarray[int | float]) -> tuple[int, float]:
+def get_best_group_individual(group: List[int], population: Population) -> tuple[int, float]:
     best_individual_index = None
     best_fitness = np.inf
 
     for individual_index in group:
-        individual, active_path = population.get_individual_with_active_path(individual_index)
-        fitness = evaluate_fitness(genome=individual, input_matrix=input_matrix, wanted_output=wanted_output, genome_active_path_indexes=active_path)
+        fitness = population.get_fitness(individual_index)
         if fitness < best_fitness:
             best_fitness = fitness
             best_individual_index = individual_index
@@ -92,7 +91,6 @@ def generate_new_population(new_parent_1_index: List[List[int]], new_parent_2_in
     child_1_mutated = mutate_individual(child_1, population.ncolumns, population.nrows, population.mutation_rate)
     child_2_mutated = mutate_individual(child_2, population.ncolumns, population.nrows, population.mutation_rate)
 
-    population.set_parent(parent_1, parent_index=0)
-    population.set_parent(parent_2, parent_index=1)
+    population.set_parents_by_indexes(new_parent_1_index, new_parent_2_index) # parents first, as they can be one of the previous children
     population.set_children([child_1_mutated, child_2_mutated])
 

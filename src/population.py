@@ -1,10 +1,11 @@
 from constants.operations import operations, op_inputs
+from genome import evaluate_fitness
 from utils import get_active_gene_indexes, get_last_possible_input_index, get_number_of_gene_inputs, get_output_gene_indexes
 from typing import List
 import numpy as np
 
 class Population:
-    def __init__(self, population_size: int, ncolumns: int, nrows: int, mutation_rate: float, nparents: int = 1) -> None:
+    def __init__(self, population_size: int, ncolumns: int, nrows: int, mutation_rate: float, input_matrix: np.ndarray[np.ndarray[int | float]], wanted_output: np.ndarray[float | int], nparents: int = 1) -> None:
         '''[summary]
         Initializes the population with random genomes.
         ### Parameters
@@ -43,7 +44,13 @@ class Population:
         self.children_indexes = [i for i in range(nparents, population_size)] # 1 becouse its only for children (minus parent with index 0)
         self.mutation_rate = mutation_rate
         self.active_paths = [[] for i in range(population_size)]
+        self.fitnesses = [np.inf for i in range(population_size)]
+        self.input_matrix = input_matrix
+        self.wanted_output = wanted_output
+        self.population_size = population_size
+        self.fitness_evaluations = 0
         self.reset_all_active_paths()
+        self.calculate_fitness_all()
 
     def get_starting_popultation(self, population_size: int) -> List[List[List[int]]]:
         '''[summary]
@@ -160,6 +167,7 @@ class Population:
 
         self.population[index] = individual
         self.reset_active_path(index)
+        self.calculate_fitness(index)
 
     def get_parent(self, parent_index = 0) -> List[List[int]]:
         '''[summary]
@@ -190,6 +198,7 @@ class Population:
     
         self.population[parent_index] = new_parent
         self.reset_active_path(parent_index)
+        self.calculate_fitness(parent_index)
     
     def get_children(self) -> List[List[List[int]]]:
         '''[summary]
@@ -230,6 +239,7 @@ class Population:
             child_index = self.children_indexes[i]
             self.population[child_index] = new_children[i]
             self.reset_active_path(child_index)
+            self.calculate_fitness(child_index)
         
     def get_ninputs(self) -> int:
         '''[summary]
@@ -298,3 +308,196 @@ class Population:
 
     def get_individual_with_active_path(self, individual_index) -> tuple[List[List[int]], List[int]]:
         return (self.get_individual(individual_index), self.get_active_path(individual_index))
+    
+    def get_fitness(self, individual_index: int) -> float:
+        '''[summary]
+        Returns the fitness of the individual.
+        ### Parameters
+        1. individual_index: int
+            - index of the individual
+        ### Returns
+        float
+            - fitness of the individual
+        '''
+        return self.fitnesses[individual_index]
+    
+    def set_fitness(self, individual_index: int, fitness: float) -> None:
+        '''[summary]
+        Sets the fitness of the individual.
+        ### Parameters
+        1. individual_index: int
+            - index of the individual
+        2. fitness: float
+            - fitness of the individual
+        ### Returns
+        None
+        '''
+        self.fitnesses[individual_index] = fitness
+
+    def calculate_fitness(self, individual_index: int) -> None:
+        '''[summary]
+        Calculates the fitness of the individual.
+        ### Parameters
+        1. individual_index: int
+            - index of the individual
+        ### Returns
+        None
+        '''
+        individual, active_path = self.get_individual_with_active_path(individual_index)
+        self.set_fitness(individual_index, evaluate_fitness(individual, active_path, self.input_matrix, self.wanted_output))
+        self.fitness_evaluations += 1
+
+    def calculate_fitness_all(self) -> None:
+        '''[summary]
+        Calculates the fitness of all individuals in the population.
+        ### Parameters
+        1. input_matrix: np.ndarray[np.ndarray[int | float]]
+            - input_matrix data for the function
+        2. wanted_output: np.ndarray[float | int]
+            - expected output of the function
+        ### Returns
+        None
+        '''
+        for i in range(len(self.population)):
+            self.calculate_fitness(i)
+
+    def get_fittest_individual(self) -> tuple[List[List[int]], float]:
+        '''[summary]
+        Returns the fittest individual from the population.
+        ### Returns
+        1. List[List[int]]
+            - fittest individual
+        2. float
+            - fitness of the fittest individual
+        '''
+        fittest_index = self.fitnesses.index(min(self.fitnesses))
+        return (self.get_individual(fittest_index), self.get_fitness(fittest_index))
+
+    def get_children_fitness_array(self) -> List[float]:
+        '''[summary]
+        Returns the fitnesses of the children.
+        ### Returns
+        List[float]
+            - fitnesses of the children
+        '''
+        children_fitnesses = []
+        for child_index in self.children_indexes:
+            children_fitnesses.append(self.get_fitness(child_index))
+        return children_fitnesses
+
+    def get_fittest_child(self) -> tuple[List[List[int]], float]:
+        '''[summary]
+        Returns the fittest child from the population.
+        ### Returns
+        1. List[List[int]]
+            - fittest child
+        2. float
+            - fitness of the fittest child
+        '''
+        best_child_index = self.children_indexes[0]
+        best_child_fitness = self.get_fitness(best_child_index)
+        for child_index in self.children_indexes:
+            if self.fitnesses[child_index] < best_child_fitness:
+                best_child_index = child_index
+                best_child_fitness = self.fitnesses[child_index]
+
+        return (self.get_individual(best_child_index), best_child_fitness)
+    
+    def get_fittest_child_index(self) -> tuple[int, float]:
+        '''[summary]
+        Returns the fittest child index from the population.
+        ### Returns
+        1. int
+            - fittest child index
+        2. float
+            - fitness of the fittest child
+        '''
+        best_child_index = self.children_indexes[0]
+        best_child_fitness = self.get_fitness(best_child_index)
+        for child_index in self.children_indexes:
+            if self.fitnesses[child_index] < best_child_fitness:
+                best_child_index = child_index
+                best_child_fitness = self.fitnesses[child_index]
+        return best_child_index, best_child_fitness
+
+    def get_parent_fitness(self, parent_index=0) -> float:
+        '''[summary]
+        Returns the fitness of the parent.
+        ### Returns
+        float
+            - fitness of the parent
+        '''
+        return self.get_fitness(parent_index)
+    
+    def set_parent_by_index(self, new_parent_index: int, parent_index: int = 0) -> None:
+        '''[summary]
+        Sets the parent by index.
+        ### Parameters
+        1. parent_index: int
+            - index of the parent
+        ### Returns
+        None
+        '''
+        if parent_index >= self.nparents:
+            raise ValueError("Parent index out of range")
+        
+        if new_parent_index == parent_index:
+            return
+        else:
+            self.move_individual(new_parent_index, parent_index)
+
+    def set_parents_by_indexes(self, new_parent_1_index: int, new_parent_2_index: int) -> None:
+        '''[summary]
+        Sets the parents by indexes.
+        ### Parameters
+        1. new_parent_indexes: List[int]
+            - indexes of the new parents
+        ### Returns
+        None
+        '''
+        if self.is_parent(new_parent_1_index) and self.is_parent(new_parent_2_index):
+            return
+        elif self.is_parent(new_parent_1_index):
+            if new_parent_1_index == 0:
+                self.move_individual(new_parent_2_index, 1)
+            elif new_parent_1_index == 1:
+                self.move_individual(new_parent_2_index, 0)
+            else:
+                raise ValueError("Parent index out of range")
+        elif self.is_parent(new_parent_2_index):
+            if new_parent_2_index == 0:
+                self.move_individual(new_parent_1_index, 1)
+            elif new_parent_2_index == 1:
+                self.move_individual(new_parent_1_index, 0)
+            else:
+                raise ValueError("Parent index out of range")
+        else:
+            self.move_individual(new_parent_1_index, 0)
+            self.move_individual(new_parent_2_index, 1)
+
+    def is_parent(self, index: int) -> bool:
+        '''[summary]
+        Returns True if the given index is a parent, False otherwise.
+        ### Parameters
+        1. index: int
+            - index to check
+        ### Returns
+        bool
+            - True if the given index is a parent, False otherwise
+        '''
+        return index < self.nparents
+    
+    def move_individual(self, from_index: int, to_index: int) -> None:
+        '''[summary]
+        Moves an individual from one index to another.
+        ### Parameters
+        1. from_index: int
+            - index to move from
+        2. to_index: int
+            - index to move to
+        ### Returns
+        None
+        '''
+        self.population[to_index] = self.population[from_index]
+        self.active_paths[to_index] = self.active_paths[from_index]
+        self.fitnesses[to_index] = self.fitnesses[from_index]

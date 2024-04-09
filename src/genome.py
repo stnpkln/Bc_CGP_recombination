@@ -1,5 +1,5 @@
 from constants.operations import operations, op_inputs, op_functions
-from utils import get_active_gene_indexes, get_last_possible_input_index, get_number_of_gene_inputs, get_number_of_op_inputs, get_output_gene_indexes, is_input_gene, is_output_gene, random_bool
+from utils import get_last_possible_input_index, get_number_of_op_inputs, is_input_gene, is_output_gene, random_bool
 from typing import List
 import numpy as np
 from sklearn.metrics import mean_squared_error

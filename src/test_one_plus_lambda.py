@@ -1,6 +1,6 @@
 from evolution import evolve
 from genome import genome_output
-from one_plus_lambda import generate_new_population, get_fittest_individual
+from one_plus_lambda import generate_new_population, get_fittest_individual_index
 from population import Population
 
 import unittest
@@ -44,20 +44,22 @@ class TestOnePlusLambda(unittest.TestCase):
             return (x + x) * x
 
         # testing if children with same fitness is chosen over parent
-        population = Population(4, 4, 1, 0.1)
-        population.set_parent(test_genome_best_parent)
-        population.set_children([test_genome_good, test_genome_bad, test_genome_best_child])
         input = np.array([np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])]) 
         wanted_output = func(input)
-        top_individual, top_fitness = get_fittest_individual(population, input, wanted_output)
+        population = Population(4, 4, 1, 0.1, input, wanted_output)
+        population.set_parent(test_genome_best_parent)
+        population.set_children([test_genome_good, test_genome_bad, test_genome_best_child])
+        top_individual_index, top_fitness = get_fittest_individual_index(population)
+        top_individual = population.get_individual(top_individual_index)
         self.assertEqual(top_fitness, 0.0)
         # the only difference between best child and best parent (easier for testing)
         self.assertEqual(top_individual[2][1], 1, "child with same fitness as parent should be chosen")
 
-    def test_generate_generate_new_population(self):
+    def test_generate_new_population(self):
         # testing if children are generated
-        population = Population(5, 4, 1, 0.1)
-        generate_new_population(test_genome_best_parent, population)
+        population = Population(5, 4, 1, 0.1, [[1]], [1])
+        population.set_parent(test_genome_best_parent)
+        generate_new_population(0, population)
         children = population.get_children()
         self.assertEqual(len(children), 4, "4 children should be generated")
         self.assertEqual(len(children[0]), 4, "children should have the same length as parent")

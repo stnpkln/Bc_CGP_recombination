@@ -41,7 +41,7 @@ class TestTournamentSelection(unittest.TestCase):
 
     def test_generate_generate_new_population(self):
         # testing if children are generated
-        population = Population(population_size=4, ncolumns=4, nrows=1, mutation_rate=0.1, nparents=2)
+        population = Population(population_size=4, ncolumns=4, nrows=1, mutation_rate=0.1, nparents=2, wanted_output=[1], input_matrix=[[1]])
         population.set_individual(0, test_genome_best_parent)
         population.set_individual(1, test_genome_good_parent)
         generate_new_population(0, 1, population, 1, subgraph_exchange)
@@ -55,13 +55,13 @@ class TestTournamentSelection(unittest.TestCase):
             self.assertListEqual(parent[i], test_genome_best_parent[i], "parent should not be changed")
             
     def test_get_best_group_individual(self):
-        population = Population(population_size=4, ncolumns=4, nrows=1, mutation_rate=0.1, nparents=2)
-        population.set_individual(0, test_genome_best_parent)
-        population.set_individual(1, test_genome_good_parent)
         best_parent_function = lambda x: (x + x) * x
         input_matrix = np.array([np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])])
         wanted_output = np.array(best_parent_function(input_matrix[0]))
-        best_individual_index, best_fitness = get_best_group_individual([0, 1], population, input_matrix, wanted_output)
+        population = Population(population_size=4, ncolumns=4, nrows=1, mutation_rate=0.1, nparents=2, wanted_output=wanted_output, input_matrix=input_matrix)
+        population.set_individual(0, test_genome_best_parent)
+        population.set_individual(1, test_genome_good_parent)
+        best_individual_index, best_fitness = get_best_group_individual([0, 1], population)
         self.assertEqual(best_individual_index, 0, "should return the best individual index")
         self.assertEqual(best_fitness, 0, "should return the best fitness")
 

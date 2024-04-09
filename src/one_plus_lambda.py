@@ -14,30 +14,30 @@ def one_plus_lambda(population_size: int,
                     max_fitness_evaluations: int,
                     mutation_rate: int) -> tuple[List[List[int]], float, int, int, List[dict]]:
     
-    population = Population(population_size, ncolumns, nrows, mutation_rate)
+    population = Population(population_size, ncolumns, nrows, mutation_rate, input_matrix=input_matrix, wanted_output=wanted_output)
 
     fitness_evaluations = 0
     generation = 0
     top_fitness = np.inf
     top_fitness_over_time = []
     while(fitness_evaluations < max_fitness_evaluations):
-        fitness_evaluations += population_size
         generation += 1
-        new_parent, fitness = get_fittest_individual(population, input_matrix, wanted_output)
+        new_parent_index, fitness = get_fittest_individual_index(population)
         if fitness < top_fitness:
             top_fitness = fitness
             top_fitness_over_time.append({"fitness": top_fitness, "generation": generation})
-
 
         # found an acceptable solution before max_fitness_evaluations was reached
         if fitness <= acceptable_boundary:
             break
 
-        generate_new_population(new_parent, population)
+        generate_new_population(new_parent_index, population)
+        fitness_evaluations += population.fitness_evaluations
     
-    return new_parent, fitness, generation, fitness_evaluations, top_fitness_over_time
+    top_individual = population.get_individual(new_parent_index)
+    return top_individual, fitness, generation, fitness_evaluations, top_fitness_over_time
 
-def generate_new_population(new_parent: List[List[int]], population: Population) -> None:
+def generate_new_population(new_parent_index: int, population: Population) -> None:
     '''[summary]
     Generates new children from the given parent and sets them to the population.
     ### Parameters
@@ -50,15 +50,16 @@ def generate_new_population(new_parent: List[List[int]], population: Population)
     '''
     n_children = len(population.children_indexes) # number of thildren to generate
     new_children = []
+    new_parent = population.get_individual(new_parent_index)
 
     for i in range(n_children):
         new_child = mutate_individual(new_parent, population.ncolumns, population.nrows, population.mutation_rate)
         new_children.append(new_child)
 
+    population.set_parent_by_index(new_parent_index) # parent first, as he can be one of the previous children
     population.set_children(new_children)
-    population.set_parent(new_parent)
 
-def get_fittest_individual(population: Population, input_matrix: np.ndarray[np.ndarray[int | float]], wanted_output: np.ndarray[float | int]) -> tuple[List[List[int]], float]:
+def get_fittest_individual_index(population: Population) -> tuple[int, float]:
     '''[summary]
     Returns the fittest individual from the given population.
     ### Parameters
@@ -74,17 +75,11 @@ def get_fittest_individual(population: Population, input_matrix: np.ndarray[np.n
     2. float
         - fitness of the fittest individual
     '''
-    parent, parent_active_path = population.get_parent_with_active_path()
-    children_with_active_paths = population.get_children_with_active_paths()
+    parent_index = 0
+    parent_fitness = population.get_parent_fitness()
+    fittest_child_index, child_fitness = population.get_fittest_child_index()
 
-    top_fitness = evaluate_fitness(parent, parent_active_path, input_matrix, wanted_output)
-    top_individual = parent
+    if child_fitness <= parent_fitness:
+        return fittest_child_index, child_fitness
 
-    for child, child_active_path in children_with_active_paths:
-        child_fitness = evaluate_fitness(child, child_active_path, input_matrix, wanted_output)
-        # comparing fitness, the best fitness is the lowest
-        if (child_fitness <= top_fitness):
-            top_fitness = child_fitness
-            top_individual = child
-
-    return top_individual, top_fitness
+    return parent_index, parent_fitness

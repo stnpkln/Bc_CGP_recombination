@@ -1,7 +1,7 @@
 from typing import List
 import pandas as pd
 from sklearn.metrics import mean_squared_error
-from constants.algorithmEnum import AlgorithmEnum
+from constants.algorithmEnum import AlgorithmEnum, algorithm_names
 from constants.functions import *
 from evolution import evolve
 from timeit import default_timer as timer
@@ -14,6 +14,8 @@ from utils import get_active_gene_indexes, get_output_gene_indexes
 acceptable_boundary = 1e-30
 max_fitness_evaluations = 1e3
 runs_per_function = 6
+single_function_runs = False
+function_to_run = ""
 def saveRun(algorithm: str, function: str, fitness_evaluations: int, generations: int, best_fitness: float, time: float, top_fitness_over_time: List[dict], run_id: str) -> None:
 	'''[summary]
 	Saves the run data to a pandas DataFrame
@@ -45,12 +47,13 @@ def saveRun(algorithm: str, function: str, fitness_evaluations: int, generations
 	with open('data-run-details.csv', 'a') as f:
 		run_details.to_csv(f, header=False, index=False)
 
-def runCGP(function: dict) -> None:
+def runCGP(function: dict, algorithm: AlgorithmEnum) -> None:
 	run_id = uuid.uuid4()
 	seed = int(run_id) % 2**32 -1
 	start = timer()
 
-	solution, fitness, generations, fitness_evaluations, top_fitness_over_time = evolve(population_size=5,
+	population_size = 5 if algorithm == AlgorithmEnum.MUTATION_ONLY else 4
+	solution, fitness, generations, fitness_evaluations, top_fitness_over_time = evolve(population_size=population_size,
 																					 ncolumns=function['n_columns'],
 																					 nrows=function['n_inputs'],
 																					 input_matrix=function['input'],
@@ -59,7 +62,7 @@ def runCGP(function: dict) -> None:
 																					 max_fitness_evaluations=max_fitness_evaluations,
 																					 mutation_rate=function['mutation_rate'],
 																					 seed=seed,
-																					 algorithm=AlgorithmEnum.MUTATION_ONLY)
+																					 algorithm=algorithm)
 
 	if fitness < acceptable_boundary:
 		solution_active_path = get_active_gene_indexes(solution, get_output_gene_indexes(solution))
@@ -70,12 +73,14 @@ def runCGP(function: dict) -> None:
 
 	end = timer()
 	time = end - start
-	saveRun('1 + lambda', function['name'], fitness_evaluations, generations, fitness, time, top_fitness_over_time, str(run_id))
+	algo_name = algorithm_names[algorithm]
+	saveRun(algo_name, function['name'], fitness_evaluations, generations, fitness, time, top_fitness_over_time, str(run_id))
 
-def runFunction(function: dict) -> None:
-	for _ in range(runs_per_function):
-		run = multiprocessing.Process(target=runCGP, args=(functions[function],))
-		run.start()
+def runFunction(function_key: str) -> None:
+	for algorithm in AlgorithmEnum:
+		for _ in range(runs_per_function):
+			run = multiprocessing.Process(target=runCGP, args=(functions[function_key], algorithm,))
+			run.start()
 
 def getCGPData() -> None:
 	'''[summary]
@@ -83,7 +88,11 @@ def getCGPData() -> None:
 	### Returns
 	None
 	'''
-	for function in functions:
+	if single_function_runs:
+		function = functions[function_to_run]
 		runFunction(function)
+	else:
+		for function in functions:
+			runFunction(function)
 
 getCGPData()
