@@ -1,7 +1,12 @@
-from __future__ import annotations
+'''
+File: operations.py
+Purpose: Contains the operations used in the CGP algorithm
+Author: Petr Bromnik
+'''
+
 import numpy as np
 
-operations = ['+', '-', '*', '%', 'sin', 'cos', 'e^n']
+operations = ['+', '-', '*', '%', 'sin', 'cos', 'e^n', 'ln(|x|)']
 op_inputs = {
 	'+': 2,
 	'-': 2,

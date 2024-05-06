@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>tournament_selection API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>tournament_selection</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import numpy as np
+
+from genome import evaluate_fitness, mutate_individual
+from population import Population
+from utils import get_active_gene_indexes, get_output_gene_indexes
+
+
+def tournament_selection(population_size,
+                        ncolumns,
+                        nrows,
+                        input_matrix,
+                        wanted_output,
+                        acceptable_boundary,
+                        max_fitness_evaluations,
+                        mutation_rate,
+                        exchange_rate,
+                        exchange_function):
+    &#39;&#39;&#39;[summary]
+    Runs CGP with tournament selection algorithm
+    ### Parameters
+    1. population_size
+        - number of individuals in the population
+    2. ncolumns
+        - number of columns in the genome
+    3. nrows
+        - number of rows in the genome
+    4. input_matrix
+        - input_matrix data for the function
+    5. wanted_output
+        - expected output of the function
+    6. acceptable_boundary
+        - acceptable fitness value
+    7. max_fitness_evaluations
+        - maximum number of fitness evaluations to run the algorithm
+    8. mutation_rate
+        - mutation rate of the algorithm
+    9. exchange_rate
+        - exchange rate of the algorithm
+    10. exchange_function
+        - function to exchange genes
+    ### Returns
+    1. List[List[int]]
+        - best individual found
+    2. float
+        - fitness of the best individual
+    3. int
+        - number of generations the algorithm ran
+    4. int
+        - number of fitness evaluations the algorithm ran
+    5. List[Dict[str, Union[float, int]]]
+        - list of the best fitness over time
+    6. bool
+        - whether the solution was found
+    &#39;&#39;&#39;
+
+    population = Population(population_size, ncolumns, nrows, mutation_rate, input_matrix=input_matrix, wanted_output=wanted_output, nparents=2, max_error=acceptable_boundary)
+
+    fitness_evaluations = 0
+    generation = 0
+    top_fitness = np.inf
+    top_fitness_over_time = []
+    found_solution = False
+    while(fitness_evaluations &lt; max_fitness_evaluations):
+        generation += 1
+        fitness_evaluations += population_size - 2
+
+        new_parent1, new_parent2, new_parent1_fitness, new_parent2_fitness = tournament(population, population_size, exchange_rate, exchange_function)
+        fitness = new_parent1_fitness if new_parent1_fitness &lt; new_parent2_fitness else new_parent2_fitness
+        top_individual = new_parent1 if new_parent1_fitness &lt; new_parent2_fitness else new_parent2
+
+        # found an acceptable solution before max_fitness_evaluations was reached
+        if population.solution_index != None:
+            found_solution = True
+            top_fitness_over_time.append({&#34;fitness&#34;: 0.0, &#34;generation&#34;: generation})
+            break
+
+        if fitness &lt; top_fitness:
+            top_fitness = fitness
+            top_fitness_over_time.append({&#34;fitness&#34;: top_fitness, &#34;generation&#34;: generation})
+
+    if population.solution_index != None:
+        top_individual = population.get_individual(population.solution_index)
+        fitness = population.get_fitness(population.solution_index)
+
+    return top_individual, fitness, generation, fitness_evaluations, top_fitness_over_time, found_solution
+    
+def tournament(population, population_size, exchange_rate, exchange_function):
+    &#39;&#39;&#39;[summary]
+    Runs the tournament selection algorithm
+    ### Parameters
+    1. population
+        - population to run the tournament on
+    2. population_size
+        - number of individuals in the population
+    3. exchange_rate
+        - exchange rate of the algorithm
+    4. exchange_function
+        - function to exchange genes
+    ### Returns
+    1. List[List[int]]
+        - parent 1 genome
+    2. List[List[int]]
+        - parent 2 genome
+    3. float
+        - fitness of parent 1
+    4. float
+        - fitness of parent 2
+    &#39;&#39;&#39;
+    individual_indexes_shuffled = [individual_index for individual_index in range(population_size)]
+    np.random.shuffle(individual_indexes_shuffled)
+
+    group1 = individual_indexes_shuffled[2:]
+    group2 = individual_indexes_shuffled[:2]
+    
+    parent_1_index, parent_1_fitness = get_best_group_individual(group1, population)
+    parent_2_index, parent_2_fitness = get_best_group_individual(group2, population)
+    parent_1 = population.get_individual(parent_1_index)
+    parent_2 = population.get_individual(parent_2_index)
+
+    generate_new_population(parent_1_index, parent_2_index, population, exchange_rate, exchange_function)
+
+    return parent_1, parent_2, parent_1_fitness, parent_2_fitness
+
+def get_best_group_individual(group, population):
+    best_individual_index = None
+    best_fitness = np.inf
+
+    for individual_index in group:
+        fitness = population.get_fitness(individual_index)
+        if fitness &lt; best_fitness:
+            best_fitness = fitness
+            best_individual_index = individual_index
+
+    return best_individual_index, best_fitness
+
+def generate_new_population(new_parent_1_index, new_parent_2_index, population, exchange_rate, exchange_function):
+    &#39;&#39;&#39;[summary]
+    Generates new children from the given parents and sets them to the population.
+    ### Parameters
+    1. new_parent1
+        - parent genome
+    2. new_parent2
+        - parent genome
+    3. population
+        - population to set the children to
+    ### Returns
+    None
+    &#39;&#39;&#39;
+    parent_1, parent_1_active_path = population.get_individual_with_active_path(new_parent_1_index)
+    parent_2, parent_2_active_path = population.get_individual_with_active_path(new_parent_2_index)
+
+    child_1 = exchange_function(parent_1, parent_1_active_path, parent_2, parent_2_active_path, exchange_rate, population.nrows)
+    child_2 = exchange_function(parent_2, parent_2_active_path, parent_1, parent_1_active_path, exchange_rate, population.nrows)
+
+    child_1_mutated = mutate_individual(child_1, population.ncolumns, population.nrows, population.mutation_rate)
+    child_2_mutated = mutate_individual(child_2, population.ncolumns, population.nrows, population.mutation_rate)
+
+    population.set_parents_by_indexes(new_parent_1_index, new_parent_2_index) # parents first, as they can be one of the previous children
+    population.set_children([child_1_mutated, child_2_mutated])</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="tournament_selection.generate_new_population"><code class="name flex">
+<span>def <span class="ident">generate_new_population</span></span>(<span>new_parent_1_index, new_parent_2_index, population, exchange_rate, exchange_function)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Generates new children from the given parents and sets them to the population.</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>new_parent1<ul>
+<li>parent genome</li>
+</ul>
+</li>
+<li>new_parent2<ul>
+<li>parent genome</li>
+</ul>
+</li>
+<li>population<ul>
+<li>population to set the children to</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate_new_population(new_parent_1_index, new_parent_2_index, population, exchange_rate, exchange_function):
+    &#39;&#39;&#39;[summary]
+    Generates new children from the given parents and sets them to the population.
+    ### Parameters
+    1. new_parent1
+        - parent genome
+    2. new_parent2
+        - parent genome
+    3. population
+        - population to set the children to
+    ### Returns
+    None
+    &#39;&#39;&#39;
+    parent_1, parent_1_active_path = population.get_individual_with_active_path(new_parent_1_index)
+    parent_2, parent_2_active_path = population.get_individual_with_active_path(new_parent_2_index)
+
+    child_1 = exchange_function(parent_1, parent_1_active_path, parent_2, parent_2_active_path, exchange_rate, population.nrows)
+    child_2 = exchange_function(parent_2, parent_2_active_path, parent_1, parent_1_active_path, exchange_rate, population.nrows)
+
+    child_1_mutated = mutate_individual(child_1, population.ncolumns, population.nrows, population.mutation_rate)
+    child_2_mutated = mutate_individual(child_2, population.ncolumns, population.nrows, population.mutation_rate)
+
+    population.set_parents_by_indexes(new_parent_1_index, new_parent_2_index) # parents first, as they can be one of the previous children
+    population.set_children([child_1_mutated, child_2_mutated])</code></pre>
+</details>
+</dd>
+<dt id="tournament_selection.get_best_group_individual"><code class="name flex">
+<span>def <span class="ident">get_best_group_individual</span></span>(<span>group, population)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_best_group_individual(group, population):
+    best_individual_index = None
+    best_fitness = np.inf
+
+    for individual_index in group:
+        fitness = population.get_fitness(individual_index)
+        if fitness &lt; best_fitness:
+            best_fitness = fitness
+            best_individual_index = individual_index
+
+    return best_individual_index, best_fitness</code></pre>
+</details>
+</dd>
+<dt id="tournament_selection.tournament"><code class="name flex">
+<span>def <span class="ident">tournament</span></span>(<span>population, population_size, exchange_rate, exchange_function)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Runs the tournament selection algorithm</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>population<ul>
+<li>population to run the tournament on</li>
+</ul>
+</li>
+<li>population_size<ul>
+<li>number of individuals in the population</li>
+</ul>
+</li>
+<li>exchange_rate<ul>
+<li>exchange rate of the algorithm</li>
+</ul>
+</li>
+<li>exchange_function<ul>
+<li>function to exchange genes</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<ol>
+<li>List[List[int]]<ul>
+<li>parent 1 genome</li>
+</ul>
+</li>
+<li>List[List[int]]<ul>
+<li>parent 2 genome</li>
+</ul>
+</li>
+<li>float<ul>
+<li>fitness of parent 1</li>
+</ul>
+</li>
+<li>float<ul>
+<li>fitness of parent 2</li>
+</ul>
+</li>
+</ol></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def tournament(population, population_size, exchange_rate, exchange_function):
+    &#39;&#39;&#39;[summary]
+    Runs the tournament selection algorithm
+    ### Parameters
+    1. population
+        - population to run the tournament on
+    2. population_size
+        - number of individuals in the population
+    3. exchange_rate
+        - exchange rate of the algorithm
+    4. exchange_function
+        - function to exchange genes
+    ### Returns
+    1. List[List[int]]
+        - parent 1 genome
+    2. List[List[int]]
+        - parent 2 genome
+    3. float
+        - fitness of parent 1
+    4. float
+        - fitness of parent 2
+    &#39;&#39;&#39;
+    individual_indexes_shuffled = [individual_index for individual_index in range(population_size)]
+    np.random.shuffle(individual_indexes_shuffled)
+
+    group1 = individual_indexes_shuffled[2:]
+    group2 = individual_indexes_shuffled[:2]
+    
+    parent_1_index, parent_1_fitness = get_best_group_individual(group1, population)
+    parent_2_index, parent_2_fitness = get_best_group_individual(group2, population)
+    parent_1 = population.get_individual(parent_1_index)
+    parent_2 = population.get_individual(parent_2_index)
+
+    generate_new_population(parent_1_index, parent_2_index, population, exchange_rate, exchange_function)
+
+    return parent_1, parent_2, parent_1_fitness, parent_2_fitness</code></pre>
+</details>
+</dd>
+<dt id="tournament_selection.tournament_selection"><code class="name flex">
+<span>def <span class="ident">tournament_selection</span></span>(<span>population_size, ncolumns, nrows, input_matrix, wanted_output, acceptable_boundary, max_fitness_evaluations, mutation_rate, exchange_rate, exchange_function)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Runs CGP with tournament selection algorithm</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>population_size<ul>
+<li>number of individuals in the population</li>
+</ul>
+</li>
+<li>ncolumns<ul>
+<li>number of columns in the genome</li>
+</ul>
+</li>
+<li>nrows<ul>
+<li>number of rows in the genome</li>
+</ul>
+</li>
+<li>input_matrix<ul>
+<li>input_matrix data for the function</li>
+</ul>
+</li>
+<li>wanted_output<ul>
+<li>expected output of the function</li>
+</ul>
+</li>
+<li>acceptable_boundary<ul>
+<li>acceptable fitness value</li>
+</ul>
+</li>
+<li>max_fitness_evaluations<ul>
+<li>maximum number of fitness evaluations to run the algorithm</li>
+</ul>
+</li>
+<li>mutation_rate<ul>
+<li>mutation rate of the algorithm</li>
+</ul>
+</li>
+<li>exchange_rate<ul>
+<li>exchange rate of the algorithm</li>
+</ul>
+</li>
+<li>exchange_function<ul>
+<li>function to exchange genes</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<ol>
+<li>List[List[int]]<ul>
+<li>best individual found</li>
+</ul>
+</li>
+<li>float<ul>
+<li>fitness of the best individual</li>
+</ul>
+</li>
+<li>int<ul>
+<li>number of generations the algorithm ran</li>
+</ul>
+</li>
+<li>int<ul>
+<li>number of fitness evaluations the algorithm ran</li>
+</ul>
+</li>
+<li>List[Dict[str, Union[float, int]]]<ul>
+<li>list of the best fitness over time</li>
+</ul>
+</li>
+<li>bool<ul>
+<li>whether the solution was found</li>
+</ul>
+</li>
+</ol></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def tournament_selection(population_size,
+                        ncolumns,
+                        nrows,
+                        input_matrix,
+                        wanted_output,
+                        acceptable_boundary,
+                        max_fitness_evaluations,
+                        mutation_rate,
+                        exchange_rate,
+                        exchange_function):
+    &#39;&#39;&#39;[summary]
+    Runs CGP with tournament selection algorithm
+    ### Parameters
+    1. population_size
+        - number of individuals in the population
+    2. ncolumns
+        - number of columns in the genome
+    3. nrows
+        - number of rows in the genome
+    4. input_matrix
+        - input_matrix data for the function
+    5. wanted_output
+        - expected output of the function
+    6. acceptable_boundary
+        - acceptable fitness value
+    7. max_fitness_evaluations
+        - maximum number of fitness evaluations to run the algorithm
+    8. mutation_rate
+        - mutation rate of the algorithm
+    9. exchange_rate
+        - exchange rate of the algorithm
+    10. exchange_function
+        - function to exchange genes
+    ### Returns
+    1. List[List[int]]
+        - best individual found
+    2. float
+        - fitness of the best individual
+    3. int
+        - number of generations the algorithm ran
+    4. int
+        - number of fitness evaluations the algorithm ran
+    5. List[Dict[str, Union[float, int]]]
+        - list of the best fitness over time
+    6. bool
+        - whether the solution was found
+    &#39;&#39;&#39;
+
+    population = Population(population_size, ncolumns, nrows, mutation_rate, input_matrix=input_matrix, wanted_output=wanted_output, nparents=2, max_error=acceptable_boundary)
+
+    fitness_evaluations = 0
+    generation = 0
+    top_fitness = np.inf
+    top_fitness_over_time = []
+    found_solution = False
+    while(fitness_evaluations &lt; max_fitness_evaluations):
+        generation += 1
+        fitness_evaluations += population_size - 2
+
+        new_parent1, new_parent2, new_parent1_fitness, new_parent2_fitness = tournament(population, population_size, exchange_rate, exchange_function)
+        fitness = new_parent1_fitness if new_parent1_fitness &lt; new_parent2_fitness else new_parent2_fitness
+        top_individual = new_parent1 if new_parent1_fitness &lt; new_parent2_fitness else new_parent2
+
+        # found an acceptable solution before max_fitness_evaluations was reached
+        if population.solution_index != None:
+            found_solution = True
+            top_fitness_over_time.append({&#34;fitness&#34;: 0.0, &#34;generation&#34;: generation})
+            break
+
+        if fitness &lt; top_fitness:
+            top_fitness = fitness
+            top_fitness_over_time.append({&#34;fitness&#34;: top_fitness, &#34;generation&#34;: generation})
+
+    if population.solution_index != None:
+        top_individual = population.get_individual(population.solution_index)
+        fitness = population.get_fitness(population.solution_index)
+
+    return top_individual, fitness, generation, fitness_evaluations, top_fitness_over_time, found_solution</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="tournament_selection.generate_new_population" href="#tournament_selection.generate_new_population">generate_new_population</a></code></li>
+<li><code><a title="tournament_selection.get_best_group_individual" href="#tournament_selection.get_best_group_individual">get_best_group_individual</a></code></li>
+<li><code><a title="tournament_selection.tournament" href="#tournament_selection.tournament">tournament</a></code></li>
+<li><code><a title="tournament_selection.tournament_selection" href="#tournament_selection.tournament_selection">tournament_selection</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

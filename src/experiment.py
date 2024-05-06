@@ -1,7 +1,10 @@
-from __future__ import annotations
-from typing import List
+'''
+File: experiment.py
+Purpose: Runs the CGP algorithm (parallel) on problems of symbolic regression
+Author: Petr Bromnik
+'''
+
 import pandas as pd
-from sklearn.metrics import mean_squared_error
 from constants.algorithmEnum import AlgorithmEnum, algorithm_names
 from constants.functions import *
 from evolution import evolve
@@ -9,15 +12,13 @@ from timeit import default_timer as timer
 import multiprocessing
 import uuid
 
-from genome import genome_output
-from utils import get_active_gene_indexes, get_output_gene_indexes
+acceptable_boundary = 0.01 # acceptable difference between all every value of wanted output and the actual output
+max_fitness_evaluations = 1e7 # maximum number of fitness evaluations to run the algorithm
+runs_per_function = 10 # number of runs per function
+single_function_runs = False # whether to run the algorithm on a single function
+function_to_run = "nguyen_8" # function to run the algorithm on, if single_function_runs is True
 
-acceptable_boundary = 1e-30
-max_fitness_evaluations = 1e3
-runs_per_function = 10
-single_function_runs = False
-function_to_run = ""
-def saveRun(algorithm: str, function: str, fitness_evaluations: int, generations: int, best_fitness: float, time: float, top_fitness_over_time: List[dict], run_id: str) -> None:
+def saveRun(algorithm, function, fitness_evaluations, generations, time, top_fitness_over_time, run_id, found_solution):
 	'''[summary]
 	Saves the run data to a pandas DataFrame
 	### Parameters
@@ -29,16 +30,14 @@ def saveRun(algorithm: str, function: str, fitness_evaluations: int, generations
 		- number of fitness evaluations the algorithm ran
 	4. generations: int
 		- number of generations the algorithm ran
-	5. best_fitness: float
-		- fitness of the best individual
 	6. time: float
 		- time the algorithm took to run
 	### Returns
 	None
 	'''
-	general_header = ['run_id', 'algorithm', 'function', 'fitness_evaluations', 'generations', 'best_fitness', 'time']
+	general_header = ['run_id', 'algorithm', 'function', 'fitness_evaluations', 'generations', 'time', 'found_solution']
 	general_data = pd.DataFrame(columns=general_header)
-	general_data.loc[len(general_data)] = {'run_id': run_id, 'algorithm': algorithm, 'function': function, 'generations': generations, 'fitness_evaluations': fitness_evaluations, 'best_fitness': best_fitness, 'time': time}
+	general_data.loc[len(general_data)] = {'run_id': run_id, 'algorithm': algorithm, 'function': function, 'generations': generations, 'fitness_evaluations': fitness_evaluations, 'time': time, 'found_solution': found_solution}
 	with open('data-general.csv', 'a') as f:
 		general_data.to_csv(f, header=False, index=False)
 
@@ -48,43 +47,62 @@ def saveRun(algorithm: str, function: str, fitness_evaluations: int, generations
 	with open('data-run-details.csv', 'a') as f:
 		run_details.to_csv(f, header=False, index=False)
 
-def runCGP(function: dict, algorithm: AlgorithmEnum) -> None:
+def runCGP(function, algorithm) -> None:
+	'''[summary]
+	Runs the CGP algorithm on a specific function
+	### Parameters
+	1. function: dict
+		- function to run the algorithm on
+	2. algorithm: AlgorithmEnum
+		- algorithm to run the function with
+	### Returns
+	None
+	'''
 	run_id = uuid.uuid4()
 	seed = int(run_id) % 2**32 -1
 	start = timer()
 
+	function_name = function['name']
+
 	population_size = 5 if algorithm == AlgorithmEnum.MUTATION_ONLY else 4
-	solution, fitness, generations, fitness_evaluations, top_fitness_over_time = evolve(population_size=population_size,
-																					 ncolumns=function['n_columns'],
-																					 nrows=function['n_inputs'],
-																					 input_matrix=function['input'],
-																					 wanted_output=function['wanted_output'],
-																					 acceptable_boundary=acceptable_boundary,
-																					 max_fitness_evaluations=max_fitness_evaluations,
-																					 mutation_rate=function['mutation_rate'],
-																					 seed=seed,
-																					 algorithm=algorithm)
+	try:
+		*_, generations, fitness_evaluations, top_fitness_over_time, found_solution = evolve(population_size=population_size,
+																											ncolumns=function['n_columns'],
+																											nrows=function['n_inputs'],
+																											input_matrix=function['input'],
+																											wanted_output=function['wanted_output'],
+																											acceptable_boundary=acceptable_boundary,
+																											max_fitness_evaluations=max_fitness_evaluations,
+																											mutation_rate=function['mutation_rate'],
+																											seed=seed,
+																											algorithm=algorithm)
 
-	if fitness < acceptable_boundary:
-		solution_active_path = get_active_gene_indexes(solution, get_output_gene_indexes(solution))
-		solution_output = genome_output(solution, solution_active_path, function['input'])
-		recalculated_fitness = mean_squared_error(function['wanted_output'], solution_output)
-		if recalculated_fitness > acceptable_boundary:
-			raise ValueError("recalculated fitness is not acceptable")
+		end = timer()
+		time = end - start
+		algo_name = algorithm_names[algorithm]
 
-	end = timer()
-	time = end - start
-	algo_name = algorithm_names[algorithm]
-	saveRun(algo_name, function['name'], fitness_evaluations, generations, fitness, time, top_fitness_over_time, str(run_id))
+	except Exception as e:
+		print(e)
+		fitness_evaluations = generations = time = 0
+		top_fitness_over_time = []
+		algo_name = algorithm_names[algorithm]
+		function_name = function_name + " ERROR"
 
-def runFunction(function_key: str) -> None:
+	saveRun(algo_name, function['name'], fitness_evaluations, generations, time, top_fitness_over_time, str(run_id), found_solution)
+
+def runFunction(function_key) -> None:
+	'''[summary]
+	Runs the CGP algorithm on a specific function
+	### Parameters
+	1. function_key: str
+		- name of the function to run
+	### Returns
+	None
+	'''
 	for algorithm in AlgorithmEnum:
 		for _ in range(runs_per_function):
 			run = multiprocessing.Process(target=runCGP, args=(functions[function_key], algorithm,))
 			run.start()
-
-	for run in multiprocessing.active_children():
-		run.join()
 
 def getCGPData() -> None:
 	'''[summary]
@@ -93,10 +111,9 @@ def getCGPData() -> None:
 	None
 	'''
 	if single_function_runs:
-		function = functions[function_to_run]
-		runFunction(function)
+		runFunction(function_to_run)
 	else:
 		for function in functions:
 			runFunction(function)
 
-getCGPData()
+# getCGPData()

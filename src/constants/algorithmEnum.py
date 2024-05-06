@@ -1,4 +1,9 @@
-from __future__ import annotations
+'''
+File: algorithmEnum.py.py
+Purpose: Contains the AlgorithmEnum enum class and name dictionary
+Author: Petr Bromnik
+'''
+
 import enum
 
 class AlgorithmEnum(enum.Enum):

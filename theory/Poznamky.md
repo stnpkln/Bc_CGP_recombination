@@ -424,6 +424,23 @@ Pozn. 2: Jeste jeden rozdíl, u mého algorytmu se začíná na stejném indexu,
 # Bakalářka - písemná část
 ## Nadpisy
 1. úvod
+    - prirodou inspirovane algoritmy
+      - spoustu moznosti, jak resit problémy jiz vymyslela sama priroda
+      - napriklad mravenci, hejno
+    - evoluce
+      - cim lepsim se inspirovat, nez mechanismem ktery vede vyvoj samotnych organismu. Da se rict, ze kazdy organismus je jednim z reseni na problem, jak pokracovat v existenci
+      - mechanismy zmeny v jedincich - mutace a krizeni (nebereme li v potaz fakt, ze organismus je ovlivnen prostredim i po jeho vzniku)
+      - jak lze evoluce vyuzit v reseni vypocetnich problemu
+        - lokalni optima - porovnat je s lokalnimi minimy v evoluci
+      - zpusobu, jak takovou evoluci napodobit pri vypoctech se lisi. Ruzne muzou byt jak zpusoby jak ztvarnit jedince jakozto reseni nejakeho problemu, nebo jakym zpusobem ma takova rizena evoluce probihat aby dosahla nejlepsich vysledku.
+        Tyty rozdili take samozrejme zavisi na tom, jaky problem vlastne chceme resit. 
+    - Krizeni
+      - pri krizeni dochazi k vymene informaci v genetickem kodu jedincu a vznika tak jedinec novy, ktery je kombinaci jeho rodicu.
+      - puvodne v prirode neexistovalo, evoluce se take ridila pouze mutaci, dochazelo k nepohlavnimu rozmnozovani.
+    - Krizeni v CGP
+    - Stejnetak v jednom z evolucnich algoritmu se doted nepouziva krizeni vice jedincu, nybrz pouze mutace, potomci vznikaji pouze z jednoho jedince.
+    - Tento algoritmus pro sve ucely reprezentuje jedince takovym zpusobem, ktery znesnadnuje krizeni.
+    - Bylo navrhnuto nekolik moznosti jak krizit jedince v tomto algoritmu, nektere i se slibnymi vysledky. Zatim vsak neni zadne krizeni pouzito jako standart, ci zabehnute v jeho pouzivani.
 2. abstrakt
 3. Evoluční algorytmy
   - úvod 
@@ -431,7 +448,6 @@ Pozn. 2: Jeste jeden rozdíl, u mého algorytmu se začíná na stejném indexu,
     - historie
   1. pojmy
     - gen
-    - genotyp
     - chromozom
     - jedinec
     - populace
@@ -447,21 +463,36 @@ Pozn. 2: Jeste jeden rozdíl, u mého algorytmu se začíná na stejném indexu,
       - turnaj
         - obrazek
     - generace
-  2. genetické programování
+  2. Průběh evolučního algoritmu
+    - popsat jak probíhá evoluční algoritmus (vytvoření první generace, mutace, selekce atp.)
+  3. genetické programování
     - uvod
     - definice
     - rozdily
-  3. Symbolická regrese
+  4. Symbolická regrese
     - co to je symbolická regrese (GP koza)
     - booleovske funkce jako speciální případ symbolické regrese
 4. Kartézské genetické programování
   - historie
-  - definice
-  - 1 + lambda
-  1. problematika krizeni
-  2. neci algoritmus
-  3. neci algoritmus
-  .
+  1. struktura
+  - obecná struktura
+  - non-coding uzly
+  - genotyp a fenotyp
+  - typy genu v uzlech
+  - typy funkci v uzlech
+
+  2. 1 + lambda
+    - princip 1 + lambda
+    - neutrální drift
+
+  3. Křížení
+    - proc se nepouziva
+  4. FP crossover
+  5. Diskretni fenotypicka rekombinace
+  6. Více chromozomova reprezentace
+  7. Cone-based crossover
+  8. sub-graph crossover
+  9. block crossover
   .
   .
 5. Návrh
@@ -477,13 +508,65 @@ Pozn. 2: Jeste jeden rozdíl, u mého algorytmu se začíná na stejném indexu,
     - obrázek
     - myslenka za algoritmem
 6. implementace
-  - uvod...
-  - doplnit az bude treba
+  - uvod
+    - delal jsem to v pythonu
+    - pouzil jsem knihovny (numpy) pro zrychleni vypoctu
+    - neimplementoval jsem vsechny moznosti CGP (napr levels back, vice vystupu) jelikoz to neni k sym. regresi treba (alias ma implementace neni zcela obecna)
+    - nez jsem se rozhodl ze testovat budu pouze na regresi, case kodu je obecna (napriklad nastavovani radku a sloubcu), i kdyz jsem to nakonec nevyuzil
+  - automaticke testy
+    - prubezne psani pri implementaci, obzvalst na zacatku kdy jsem nemel jak jinak overit funkcnost 
+    - priklady nejakych unittestu (kontrola ze mutace vytvari pouze validni uzly apod.)
+    - integracni testy
+      - pro mozne typy uloh
+      - kontrola ze nalezene reseni opravdu odpovida tomu, co ma
+      - kontrola ze mnou implementovane CGP zvladne rychle vyresit nejake basic problemy behem par vterin, treba (x + x) * x
+  - Populace
+    - reprezentace -1 a -2
+    - vytvareni prvni populace
+    - ukladani a cachovani dat aby se zamezilo duplicite
+  - Funkce operujici nad genotypem
+    - mutace
+    - ziskavani aktivni cesty
+    - ziskavani vystupu
+    - fitness funkce
+  - funkce operujici nad populaci
+    - evolve
+    - one_plus_lambda
+    - tournament
+  - vstupy a vystupy
+    - vytvareni vstupnich a pozadovanych vystupnich datasetu
+    - ukladani obencnych dat
+    - ukladani dat o jednotlivych bezich (hodnota fitness v generacich)
+  - dokumentace
+    - automaticke generovani z docstringu
+    - skript na vytvareni dokumentace
 
 7. Experimentace
+  - uvod
+    - na jakych funkcich se testovalo
+    - kolik bylo behu
+    - obrazky funkci ktere jsem pouzil
+  - Pro kazdou funkci
+    - nejake shrnuti jak to dopadlo pro jaky algoritmus
+    - mozne duvody proc to tak dopadlo mozna
+    - obrazek s violin ploty
+    - obrazek, kde se zprumeruje jake fitness bylo v jake generaci? kazdy algoritmus ma svoji caru a pro diskretni body se zprumeruje jake bylo fitness? to zni gooood
+  - shrnuti experimentu
+    - jak si co vedlo
+    - tabulka s jakou pravdepodobnosti jsou jednotlive metody krizeni lepsi pro kterou funkci
 
 8. závěr
+  - napsat, že by bylo v budoucnu fajn více meta-optimalizovat.
+  - u vymeny podgrafu by bylo fajn vyzkousen spoustu ruznych variant:
+    - metaoptimalizaci
+    - nedrzet se jedne pozice
+    - ruzne rozdeleni pravdepodobnosti
+    - pravdepodobnost zavisla na hloubce zanoreni
 
-ukladat fitness a generaci pokazde kdyz se najde lelpsi reseni
-
-metacentrum
+Dotazy:
+- Jak přesně se odevzdává kód? má se dát i v nějaké formě (CD?) do tistene kopie? Jako zdrojak, nebo spustitelný soubor?má bý nějaké přívětivé uživatelské rozhrani?
+- Je problém že jsem moc neřešil meta-optimalizaci? (Presneji jsem ji resil tak od oka)
+- Je teda v poradku experimentace na 5 ulohach do 10^7 evaluaci po 20 pokusech na algoritmus?
+- musim dat ke kontrole vedoucimu celou bakalarku, nebo muzu i cast? (kdyz ted mam treba teoretickou cast vice mene hotovou)
+- ...jaky mam napsat anglicky nazev pro praci? "Use of the crossover operator in cartesian genetic programming"?
+- debilni otazka - mam dekovat metacentru, i kdyz jsem z nej nedokazal zistak zadna data?

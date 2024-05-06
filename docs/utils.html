@@ -28,20 +28,19 @@
 </summary>
 <pre><code class="python">from constants.operations import operations, op_inputs
 
-from typing import List
+import random
 
-
-def get_last_possible_input_index(ncolumns: int, nrows: int, gene_index: int) -&gt; int:
+def get_last_possible_input_index(ncolumns, nrows, gene_index):
     &#39;&#39;&#39;[summary]
     For the given gene index, returns the last index that can be used as its input
     ### Parameters
-    1. ncolumns: int
+    1. ncolumns
         - number of columns in the matrix of genes
         - must be &gt; 0
-    2. nrows: int
+    2. nrows
         - number of rows in the matrix of genes
         - must be &gt; 0
-  3. gene_index: int
+  3. gene_index
         - index of the gene in the genome
         - must be &gt;= 0
     ### Returns
@@ -59,14 +58,14 @@ def get_last_possible_input_index(ncolumns: int, nrows: int, gene_index: int) -&
     columns_before = column_index
     return columns_before * nrows
 
-def get_genome_column(nrows: int, index: int) -&gt; int:
+def get_genome_column(nrows, index):
     &#39;&#39;&#39;[summary]
     Returns the column of the genome for the given index
     ### Parameters
-    1. nrows: int
+    1. nrows
         - number of rows in the matrix of genes
         - must be &gt; 0
-    2. index: int
+    2. index
         - index of the gene in the genome
         - must be &gt;= 0
     ### Returns
@@ -82,11 +81,11 @@ def get_genome_column(nrows: int, index: int) -&gt; int:
 
     return index // nrows
 
-def get_number_of_gene_inputs(gene: List[int]) -&gt; int:
+def get_number_of_gene_inputs(gene):
     &#39;&#39;&#39;[summary]
     Returns the number of inputs for the given gene
     ### Parameters
-    1. gene: List[int]
+    1. gene
         - gene to calculate number of inputs for
     ### Returns
     int
@@ -97,17 +96,133 @@ def get_number_of_gene_inputs(gene: List[int]) -&gt; int:
 
     return op_inputs[operations[gene[0]]]
 
-def get_output_gene_indexes(genome: List[List[int]]) -&gt; List[int]:
+def get_output_gene_indexes(genome):
     &#39;&#39;&#39;[summary]
     Returns indexes of output genes in genome
     ### Parameters
-    1. genome: List[List[int]]
+    1. genome
         - genome to search output genes in
     ### Returns
     List[int]
         - list of indexes of output genes in genome
     &#39;&#39;&#39;
-    return [i for i in range(len(genome)) if genome[i][0] == -2] # TODO may be optimized (last column of the genome matrix)</code></pre>
+    return [i for i in range(len(genome)) if genome[i][0] == -2] # TODO may be optimized (last column of the genome matrix)
+
+
+def get_active_gene_indexes(genome, output_gene_indexes):
+    &#39;&#39;&#39;[summary]
+    Returns indexes of active genes in genome
+    ### Parameters
+    1. genome
+        - genome to search active genes in
+    2. output_gene_indexes
+        - list of indexes of output genes
+
+    ### Returns
+    List[int]
+        - list of indexes of active genes in genome
+    &#39;&#39;&#39;
+    active_genes_indexes = []
+    added_to_active_flag = [False] * len(genome) # flag for each gene if it was added to active genes
+
+    found_new_gene = True
+    gene_indexes_to_search = output_gene_indexes.copy()
+    while (found_new_gene):
+        new_indexes_to_search = []
+        for gene_index_to_search in gene_indexes_to_search:
+            gene = genome[gene_index_to_search]
+            gene_operation = gene[0]
+
+            # in case of input gene, skip it
+            if (gene_operation == -1):
+                continue
+
+            # add the gene we are working with to active genes
+            active_genes_indexes.append(gene_index_to_search)
+
+            # in case of output gene, save it to active genes, and continue
+            if (gene_operation == -2):
+                input_gene_index = gene[1]
+                if (not added_to_active_flag[input_gene_index]):
+                    # mark the input of this gene as active, and add it to active genes
+                    added_to_active_flag[input_gene_index] = True
+                    new_indexes_to_search.append(input_gene_index)
+                continue
+
+            # function genes
+            for i in range(1, 1 + op_inputs[operations[gene_operation]]): # for each input that the operation of this gene has
+                input_gene_index = gene[i] # in case of output gene, use only the first input
+                if (not added_to_active_flag[input_gene_index]):
+                    # mark the input of this gene as active, and add it to genes to search next
+                    added_to_active_flag[input_gene_index] = True
+                    new_indexes_to_search.append(input_gene_index)
+
+        found_new_gene = len(new_indexes_to_search) != 0 # if there are no new genes to search, stop the loop
+        gene_indexes_to_search = new_indexes_to_search # reassign the genes to search
+
+    return active_genes_indexes
+
+def random_bool(chance):
+    &#39;&#39;&#39;[summary]
+    Returns True with the given chance
+    ### Parameters
+    1. chance: float
+        - chance to return True
+        - must be &gt;= 0 and &lt;= 1
+    ### Returns
+    bool
+        - True with the given chance
+    &#39;&#39;&#39;
+    return random.uniform(0, 1) &lt; chance
+
+def get_number_of_gene_inputs(gene):
+    &#39;&#39;&#39;[summary]
+    Returns the number of inputs for the given gene
+    ### Parameters
+    1. gene: List[int]
+        - gene to calculate number of inputs for
+    ### Returns
+    int
+        - number of inputs for the given gene
+    &#39;&#39;&#39;
+    return get_number_of_op_inputs(gene[0])
+
+def get_number_of_op_inputs(op):
+    &#39;&#39;&#39;[summary]
+    Returns the number of inputs for the given operation
+    ### Parameters
+    1. op: str
+        - operation to calculate number of inputs for
+        - must be in operations
+    ### Returns
+    int
+        - number of inputs for the given operation
+    &#39;&#39;&#39;
+    return op_inputs[operations[op]]
+
+def is_input_gene(gene):
+    &#39;&#39;&#39;[summary]
+    Returns True if the given gene is an input gene
+    ### Parameters
+    1. gene: List[int]
+        - gene to check if it is an input gene
+    ### Returns
+    bool
+        - True if the given gene is an input gene
+    &#39;&#39;&#39;
+    return gene[0] == -1
+
+def is_output_gene(gene):
+    &#39;&#39;&#39;[summary]
+    Returns True if the given gene is an output gene
+    ### Parameters
+    1. gene: List[int]
+        - gene to check if it is an output gene
+    ### Returns
+    bool
+        - True if the given gene is an output gene
+    &#39;&#39;&#39;
+    return gene[0] == -2</code></pre>
 </details>
 </section>
 <section>
@@ -117,20 +232,98 @@ def get_output_gene_indexes(genome: List[List[int]]) -&gt; List[int]:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="utils.get_active_gene_indexes"><code class="name flex">
+<span>def <span class="ident">get_active_gene_indexes</span></span>(<span>genome, output_gene_indexes)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Returns indexes of active genes in genome</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>genome<ul>
+<li>genome to search active genes in</li>
+</ul>
+</li>
+<li>output_gene_indexes<ul>
+<li>list of indexes of output genes</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>List[int]
+- list of indexes of active genes in genome</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_active_gene_indexes(genome, output_gene_indexes):
+    &#39;&#39;&#39;[summary]
+    Returns indexes of active genes in genome
+    ### Parameters
+    1. genome
+        - genome to search active genes in
+    2. output_gene_indexes
+        - list of indexes of output genes
+
+    ### Returns
+    List[int]
+        - list of indexes of active genes in genome
+    &#39;&#39;&#39;
+    active_genes_indexes = []
+    added_to_active_flag = [False] * len(genome) # flag for each gene if it was added to active genes
+
+    found_new_gene = True
+    gene_indexes_to_search = output_gene_indexes.copy()
+    while (found_new_gene):
+        new_indexes_to_search = []
+        for gene_index_to_search in gene_indexes_to_search:
+            gene = genome[gene_index_to_search]
+            gene_operation = gene[0]
+
+            # in case of input gene, skip it
+            if (gene_operation == -1):
+                continue
+
+            # add the gene we are working with to active genes
+            active_genes_indexes.append(gene_index_to_search)
+
+            # in case of output gene, save it to active genes, and continue
+            if (gene_operation == -2):
+                input_gene_index = gene[1]
+                if (not added_to_active_flag[input_gene_index]):
+                    # mark the input of this gene as active, and add it to active genes
+                    added_to_active_flag[input_gene_index] = True
+                    new_indexes_to_search.append(input_gene_index)
+                continue
+
+            # function genes
+            for i in range(1, 1 + op_inputs[operations[gene_operation]]): # for each input that the operation of this gene has
+                input_gene_index = gene[i] # in case of output gene, use only the first input
+                if (not added_to_active_flag[input_gene_index]):
+                    # mark the input of this gene as active, and add it to genes to search next
+                    added_to_active_flag[input_gene_index] = True
+                    new_indexes_to_search.append(input_gene_index)
+
+        found_new_gene = len(new_indexes_to_search) != 0 # if there are no new genes to search, stop the loop
+        gene_indexes_to_search = new_indexes_to_search # reassign the genes to search
+
+    return active_genes_indexes</code></pre>
+</details>
+</dd>
 <dt id="utils.get_genome_column"><code class="name flex">
-<span>def <span class="ident">get_genome_column</span></span>(<span>nrows: int, index: int) ‑> int</span>
+<span>def <span class="ident">get_genome_column</span></span>(<span>nrows, index)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>[summary]
 Returns the column of the genome for the given index</p>
 <h3 id="parameters">Parameters</h3>
 <ol>
-<li>nrows: int<ul>
+<li>nrows<ul>
 <li>number of rows in the matrix of genes</li>
 <li>must be &gt; 0</li>
 </ul>
 </li>
-<li>index: int<ul>
+<li>index<ul>
 <li>index of the gene in the genome</li>
 <li>must be &gt;= 0</li>
 </ul>
@@ -153,14 +346,14 @@ Raises</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_genome_column(nrows: int, index: int) -&gt; int:
+<pre><code class="python">def get_genome_column(nrows, index):
     &#39;&#39;&#39;[summary]
     Returns the column of the genome for the given index
     ### Parameters
-    1. nrows: int
+    1. nrows
         - number of rows in the matrix of genes
         - must be &gt; 0
-    2. index: int
+    2. index
         - index of the gene in the genome
         - must be &gt;= 0
     ### Returns
@@ -178,19 +371,19 @@ Raises</p>
 </details>
 </dd>
 <dt id="utils.get_last_possible_input_index"><code class="name flex">
-<span>def <span class="ident">get_last_possible_input_index</span></span>(<span>ncolumns: int, nrows: int, gene_index: int) ‑> int</span>
+<span>def <span class="ident">get_last_possible_input_index</span></span>(<span>ncolumns, nrows, gene_index)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>[summary]
 For the given gene index, returns the last index that can be used as its input
 ### Parameters
-1. ncolumns: int
+1. ncolumns
 - number of columns in the matrix of genes
 - must be &gt; 0
-2. nrows: int
+2. nrows
 - number of rows in the matrix of genes
 - must be &gt; 0
-3. gene_index: int
+3. gene_index
 - index of the gene in the genome
 - must be &gt;= 0
 ### Returns
@@ -204,17 +397,17 @@ Raises</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_last_possible_input_index(ncolumns: int, nrows: int, gene_index: int) -&gt; int:
+<pre><code class="python">def get_last_possible_input_index(ncolumns, nrows, gene_index):
     &#39;&#39;&#39;[summary]
     For the given gene index, returns the last index that can be used as its input
     ### Parameters
-    1. ncolumns: int
+    1. ncolumns
         - number of columns in the matrix of genes
         - must be &gt; 0
-    2. nrows: int
+    2. nrows
         - number of rows in the matrix of genes
         - must be &gt; 0
-  3. gene_index: int
+  3. gene_index
         - index of the gene in the genome
         - must be &gt;= 0
     ### Returns
@@ -234,7 +427,7 @@ Raises</p>
 </details>
 </dd>
 <dt id="utils.get_number_of_gene_inputs"><code class="name flex">
-<span>def <span class="ident">get_number_of_gene_inputs</span></span>(<span>gene: List[int]) ‑> int</span>
+<span>def <span class="ident">get_number_of_gene_inputs</span></span>(<span>gene)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>[summary]
@@ -253,7 +446,7 @@ Returns the number of inputs for the given gene</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_number_of_gene_inputs(gene: List[int]) -&gt; int:
+<pre><code class="python">def get_number_of_gene_inputs(gene):
     &#39;&#39;&#39;[summary]
     Returns the number of inputs for the given gene
     ### Parameters
@@ -263,21 +456,53 @@ Returns the number of inputs for the given gene</p>
     int
         - number of inputs for the given gene
     &#39;&#39;&#39;
-    if len(gene) == 0:
-        raise ValueError(&#34;gene must have at least one element&#34;)
-
-    return op_inputs[operations[gene[0]]]</code></pre>
+    return get_number_of_op_inputs(gene[0])</code></pre>
+</details>
+</dd>
+<dt id="utils.get_number_of_op_inputs"><code class="name flex">
+<span>def <span class="ident">get_number_of_op_inputs</span></span>(<span>op)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Returns the number of inputs for the given operation</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>op: str<ul>
+<li>operation to calculate number of inputs for</li>
+<li>must be in operations</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>int
+- number of inputs for the given operation</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_number_of_op_inputs(op):
+    &#39;&#39;&#39;[summary]
+    Returns the number of inputs for the given operation
+    ### Parameters
+    1. op: str
+        - operation to calculate number of inputs for
+        - must be in operations
+    ### Returns
+    int
+        - number of inputs for the given operation
+    &#39;&#39;&#39;
+    return op_inputs[operations[op]]</code></pre>
 </details>
 </dd>
 <dt id="utils.get_output_gene_indexes"><code class="name flex">
-<span>def <span class="ident">get_output_gene_indexes</span></span>(<span>genome: List[List[int]]) ‑> List[int]</span>
+<span>def <span class="ident">get_output_gene_indexes</span></span>(<span>genome)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>[summary]
 Returns indexes of output genes in genome</p>
 <h3 id="parameters">Parameters</h3>
 <ol>
-<li>genome: List[List[int]]<ul>
+<li>genome<ul>
 <li>genome to search output genes in</li>
 </ul>
 </li>
@@ -289,17 +514,118 @@ Returns indexes of output genes in genome</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_output_gene_indexes(genome: List[List[int]]) -&gt; List[int]:
+<pre><code class="python">def get_output_gene_indexes(genome):
     &#39;&#39;&#39;[summary]
     Returns indexes of output genes in genome
     ### Parameters
-    1. genome: List[List[int]]
+    1. genome
         - genome to search output genes in
     ### Returns
     List[int]
         - list of indexes of output genes in genome
     &#39;&#39;&#39;
     return [i for i in range(len(genome)) if genome[i][0] == -2] # TODO may be optimized (last column of the genome matrix)</code></pre>
+</details>
+</dd>
+<dt id="utils.is_input_gene"><code class="name flex">
+<span>def <span class="ident">is_input_gene</span></span>(<span>gene)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Returns True if the given gene is an input gene</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>gene: List[int]<ul>
+<li>gene to check if it is an input gene</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>bool
+- True if the given gene is an input gene</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_input_gene(gene):
+    &#39;&#39;&#39;[summary]
+    Returns True if the given gene is an input gene
+    ### Parameters
+    1. gene: List[int]
+        - gene to check if it is an input gene
+    ### Returns
+    bool
+        - True if the given gene is an input gene
+    &#39;&#39;&#39;
+    return gene[0] == -1</code></pre>
+</details>
+</dd>
+<dt id="utils.is_output_gene"><code class="name flex">
+<span>def <span class="ident">is_output_gene</span></span>(<span>gene)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Returns True if the given gene is an output gene</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>gene: List[int]<ul>
+<li>gene to check if it is an output gene</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>bool
+- True if the given gene is an output gene</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_output_gene(gene):
+    &#39;&#39;&#39;[summary]
+    Returns True if the given gene is an output gene
+    ### Parameters
+    1. gene: List[int]
+        - gene to check if it is an output gene
+    ### Returns
+    bool
+        - True if the given gene is an output gene
+    &#39;&#39;&#39;
+    return gene[0] == -2</code></pre>
+</details>
+</dd>
+<dt id="utils.random_bool"><code class="name flex">
+<span>def <span class="ident">random_bool</span></span>(<span>chance)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Returns True with the given chance</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>chance: float<ul>
+<li>chance to return True</li>
+<li>must be &gt;= 0 and &lt;= 1</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>bool
+- True with the given chance</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def random_bool(chance):
+    &#39;&#39;&#39;[summary]
+    Returns True with the given chance
+    ### Parameters
+    1. chance: float
+        - chance to return True
+        - must be &gt;= 0 and &lt;= 1
+    ### Returns
+    bool
+        - True with the given chance
+    &#39;&#39;&#39;
+    return random.uniform(0, 1) &lt; chance</code></pre>
 </details>
 </dd>
 </dl>
@@ -315,10 +641,15 @@ Returns indexes of output genes in genome</p>
 <ul id="index">
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="utils.get_active_gene_indexes" href="#utils.get_active_gene_indexes">get_active_gene_indexes</a></code></li>
 <li><code><a title="utils.get_genome_column" href="#utils.get_genome_column">get_genome_column</a></code></li>
 <li><code><a title="utils.get_last_possible_input_index" href="#utils.get_last_possible_input_index">get_last_possible_input_index</a></code></li>
 <li><code><a title="utils.get_number_of_gene_inputs" href="#utils.get_number_of_gene_inputs">get_number_of_gene_inputs</a></code></li>
+<li><code><a title="utils.get_number_of_op_inputs" href="#utils.get_number_of_op_inputs">get_number_of_op_inputs</a></code></li>
 <li><code><a title="utils.get_output_gene_indexes" href="#utils.get_output_gene_indexes">get_output_gene_indexes</a></code></li>
+<li><code><a title="utils.is_input_gene" href="#utils.is_input_gene">is_input_gene</a></code></li>
+<li><code><a title="utils.is_output_gene" href="#utils.is_output_gene">is_output_gene</a></code></li>
+<li><code><a title="utils.random_bool" href="#utils.random_bool">random_bool</a></code></li>
 </ul>
 </li>
 </ul>

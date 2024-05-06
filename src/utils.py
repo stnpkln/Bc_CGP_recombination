@@ -1,20 +1,24 @@
+'''
+File: utils.py
+Purpose: Contains utility functions used in the CGP algorithm
+Author: Petr Bromnik
+'''
 
 from constants.operations import operations, op_inputs
 
-from typing import List
 import random
 
-def get_last_possible_input_index(ncolumns: int, nrows: int, gene_index: int) -> int:
+def get_last_possible_input_index(ncolumns, nrows, gene_index):
     '''[summary]
     For the given gene index, returns the last index that can be used as its input
     ### Parameters
-    1. ncolumns: int
+    1. ncolumns
         - number of columns in the matrix of genes
         - must be > 0
-    2. nrows: int
+    2. nrows
         - number of rows in the matrix of genes
         - must be > 0
-  3. gene_index: int
+  3. gene_index
         - index of the gene in the genome
         - must be >= 0
     ### Returns
@@ -32,14 +36,14 @@ def get_last_possible_input_index(ncolumns: int, nrows: int, gene_index: int) ->
     columns_before = column_index
     return columns_before * nrows
 
-def get_genome_column(nrows: int, index: int) -> int:
+def get_genome_column(nrows, index):
     '''[summary]
     Returns the column of the genome for the given index
     ### Parameters
-    1. nrows: int
+    1. nrows
         - number of rows in the matrix of genes
         - must be > 0
-    2. index: int
+    2. index
         - index of the gene in the genome
         - must be >= 0
     ### Returns
@@ -55,11 +59,11 @@ def get_genome_column(nrows: int, index: int) -> int:
 
     return index // nrows
 
-def get_number_of_gene_inputs(gene: List[int]) -> int:
+def get_number_of_gene_inputs(gene):
     '''[summary]
     Returns the number of inputs for the given gene
     ### Parameters
-    1. gene: List[int]
+    1. gene
         - gene to calculate number of inputs for
     ### Returns
     int
@@ -70,11 +74,11 @@ def get_number_of_gene_inputs(gene: List[int]) -> int:
 
     return op_inputs[operations[gene[0]]]
 
-def get_output_gene_indexes(genome: List[List[int]]) -> List[int]:
+def get_output_gene_indexes(genome):
     '''[summary]
     Returns indexes of output genes in genome
     ### Parameters
-    1. genome: List[List[int]]
+    1. genome
         - genome to search output genes in
     ### Returns
     List[int]
@@ -83,13 +87,13 @@ def get_output_gene_indexes(genome: List[List[int]]) -> List[int]:
     return [i for i in range(len(genome)) if genome[i][0] == -2] # TODO may be optimized (last column of the genome matrix)
 
 
-def get_active_gene_indexes(genome: List[List[int]], output_gene_indexes: List[int]) -> List[int]:
+def get_active_gene_indexes(genome, output_gene_indexes):
     '''[summary]
     Returns indexes of active genes in genome
     ### Parameters
-    1. genome: List[List[int]]
+    1. genome
         - genome to search active genes in
-    2. output_gene_indexes: List[int]
+    2. output_gene_indexes
         - list of indexes of output genes
 
     ### Returns
@@ -136,18 +140,65 @@ def get_active_gene_indexes(genome: List[List[int]], output_gene_indexes: List[i
 
     return active_genes_indexes
 
-def random_bool(chance: float):
+def random_bool(chance):
+    '''[summary]
+    Returns True with the given chance
+    ### Parameters
+    1. chance: float
+        - chance to return True
+        - must be >= 0 and <= 1
+    ### Returns
+    bool
+        - True with the given chance
+    '''
     return random.uniform(0, 1) < chance
 
-def get_number_of_gene_inputs(gene: List[int]) -> int:
+def get_number_of_gene_inputs(gene):
+    '''[summary]
+    Returns the number of inputs for the given gene
+    ### Parameters
+    1. gene: List[int]
+        - gene to calculate number of inputs for
+    ### Returns
+    int
+        - number of inputs for the given gene
+    '''
     return get_number_of_op_inputs(gene[0])
 
-def get_number_of_op_inputs(op: int) -> int:
+def get_number_of_op_inputs(op):
+    '''[summary]
+    Returns the number of inputs for the given operation
+    ### Parameters
+    1. op: str
+        - operation to calculate number of inputs for
+        - must be in operations
+    ### Returns
+    int
+        - number of inputs for the given operation
+    '''
     return op_inputs[operations[op]]
 
-def is_input_gene(gene: List[int]) -> bool:
+def is_input_gene(gene):
+    '''[summary]
+    Returns True if the given gene is an input gene
+    ### Parameters
+    1. gene: List[int]
+        - gene to check if it is an input gene
+    ### Returns
+    bool
+        - True if the given gene is an input gene
+    '''
     return gene[0] == -1
 
-def is_output_gene(gene: List[int]) -> bool:
+def is_output_gene(gene):
+    '''[summary]
+    Returns True if the given gene is an output gene
+    ### Parameters
+    1. gene: List[int]
+        - gene to check if it is an output gene
+    ### Returns
+    bool
+        - True if the given gene is an output gene
+    '''
     return gene[0] == -2
 

@@ -1,29 +1,25 @@
-# Bc_CGP_recombination
+# Bakalářská práce
 
-Bakalářská práce na téma "Využití operátoru křížení v kartézském genetickém programování"
+Praktická část bakalářské práce s názvem "Využití operátoru křížení v kartézském genetickém programování"
 
-# Plán
-- dořešit TODOčka v kódu ***DONE***
-- více protestovat (ověřit validitu výstupu algoritmu) ***DONE***
-- nastavit parametry tak aby byly vhodné ? ASI ***DONE*** ?
-- experimentovat s klasickým CGP - 1 + lambda ***DONE***
-- vyřešit generování dokumentace (nejspíš sphynx) ***DONE***
-- vytvořit větve pro algoritmy křížení ***DONE***
-- otestovat, zjistit nejlepší parametry
-- začít psát bakalářskou práci
-   - nadpisy
-   - úvod (CGP obecně, CGP křížení...)
+## Spuštění automatických testů
+- v `/src` spustit `python -m unittest`
 
-## testování
-- v /src spustit `python -m unittest`
+## Generování dokumentace
+- v rootovém adresáři spustit `./generate-docs.sh`
 
-## dokumentace
-- v /docs
-- generování: `./generate-docs.sh`
+## Spouštění experimentů
+- v souboru `/src/experiment.py`:
+	- odkomentovat getCGPdata() (zakomentováno kvůli chybnému frameworku pdocs, který jinak spouští při generování dokumentace experimenty)
+	- lze přenastavit parametry běhů, popsáno v souboru
+- spustit `python experiment.py`
+- výstupy experimentů budou v souborech `data-general.csv` a `data-run-details.csv`
 
-### dotazy:
-- volba evolucni strategie ke krizeni 1 a 2
-- co vsechno za data bych mel sbirat pro vyhodnocovani za metriky
-- je 1e7 fitness evaluaci dostacujici pro metriky (vychazi to asi na 1-2 hodiny max)
-   - MOMENTALNE TO VYCHAZI: 400 minut na vsechny funkce * 3 algorytmy * 30 pokusu = 25 dni...
-   - u puvodniho clanku pouzili 10e8, ale to by dle mych vypoctu bylo na muj notas az moc
+## Zpracování dat
+- soubor `/src/graphs/data_visualizer`
+- spustit `python data_visualizer.py`, `data-general.csv` a `data-run-details.csv` musí být v adresáři ze kterého se spouští
+- skript vygeneruje grafy ve formátu pdf a tabulku csv se zpracovanými daty jednotlivých algoritmů
+
+Autor: Petr Bromnik
+Vedoucí práce: Ing. Martin Hurta
+Datum: Duben 2024
