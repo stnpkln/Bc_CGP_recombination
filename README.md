@@ -5,11 +5,11 @@ Practical part of bachelor thesis called "USE OF THE CROSSOVER OPERATOR IN CARTE
 This code and data does not correspond to the final thesis 1:1, but its very close.
 
 ## Abstract
-The aim of this paper is to propose and implement two new crossover methods in Cartesian
+The aim of this work is to propose and implement two new crossover methods in Cartesian
 Genetic Programming (CGP) and compare them with existing approaches. CGP is a type
 of evolutionary algorithm that uses acyclic graphs to represent executable programs. Most
 CGP applications use the mutation operator only, but the effort to find a suitable crossover
-operator is still ongoing. In this paper, the two newly proposed crossover methods are
+operator is still ongoing. In this work, the two newly proposed crossover methods are
 compared on five symbolic regression problems against the standard 1 + 𝜆 procedure based
 purely on mutation. Experimental results show that these methods find solutions in a similar
 number of fitness evaluations as 1 + 𝜆 and, in two cases, even significantly earlier.
