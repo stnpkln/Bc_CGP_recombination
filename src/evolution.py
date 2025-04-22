@@ -1,23 +1,28 @@
+'''
+File: evolution.py
+Purpose: Contains the evolve function that runs the CGP algorithm
+Author: Petr Bromnik
+'''
+
 from one_plus_lambda import one_plus_lambda
 
-from typing import List
 from genome import active_gene_transplant, subgraph_exchange
 import numpy as np
 from constants.functions import *
 from tournament_selection import tournament_selection
 from constants.algorithmEnum import AlgorithmEnum
 
-def evolve(population_size: int,
-           ncolumns: int,
-           nrows: int,
-           input_matrix: np.ndarray[np.ndarray[int | float]],
-           wanted_output: np.ndarray[float | int],
-           acceptable_boundary: int,
-           max_fitness_evaluations: int,
-           mutation_rate: float,
-           seed: int | None = None,
-           algorithm: AlgorithmEnum = AlgorithmEnum.MUTATION_ONLY,
-           exchange_rate: float = 0.5) -> tuple[List[List[int]], float, int, int, List[dict]]:
+def evolve(population_size,
+           ncolumns,
+           nrows,
+           input_matrix,
+           wanted_output,
+           acceptable_boundary,
+           max_fitness_evaluations,
+           mutation_rate,
+           seed = None,
+           algorithm = AlgorithmEnum.MUTATION_ONLY,
+           exchange_rate = 0.5):
     '''[summary]
     Runs the 1 + lambda evolutionary algorithm to find a genome that solves the given problem.
     ### Parameters

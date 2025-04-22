@@ -1,8 +1,12 @@
-import math
-import numpy as np
-import uuid
+'''
+File: operations.py
+Purpose: Contains the operations used in the CGP algorithm
+Author: Petr Bromnik
+'''
 
-operations = ['+', '-', '*', '%', 'sin', 'cos', 'e^n']
+import numpy as np
+
+operations = ['+', '-', '*', '%', 'sin', 'cos', 'e^n', 'ln(|x|)']
 op_inputs = {
 	'+': 2,
 	'-': 2,

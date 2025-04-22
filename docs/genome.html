@@ -27,74 +27,18 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from constants.operations import operations, op_inputs, op_functions
-from utils import get_last_possible_input_index, get_output_gene_indexes
-from typing import List
+from utils import get_active_gene_indexes, get_last_possible_input_index, get_number_of_op_inputs, get_output_gene_indexes, is_input_gene, is_output_gene, random_bool
 import numpy as np
 from sklearn.metrics import mean_squared_error
 from copy import deepcopy
 from math import floor
 
-mutation_rate = 0.1
-
-def get_active_gene_indexes(genome: List[List[int]], output_gene_indexes: List[int]) -&gt; List[int]:
-    &#39;&#39;&#39;[summary]
-    Returns indexes of active genes in genome
-    ### Parameters
-    1. genome: List[List[int]]
-        - genome to search active genes in
-    2. output_gene_indexes: List[int]
-        - list of indexes of output genes
-
-    ### Returns
-    List[int]
-        - list of indexes of active genes in genome
-    &#39;&#39;&#39;
-    active_genes_indexes = []
-    added_to_active_flag = [False] * len(genome) # flag for each gene if it was added to active genes
-
-    found_new_gene = True
-    gene_indexes_to_search = output_gene_indexes.copy()
-    while (found_new_gene):
-        new_indexes_to_search = []
-        for gene_index_to_search in gene_indexes_to_search:
-            gene = genome[gene_index_to_search]
-            gene_operation = gene[0]
-
-            # in case of input gene, skip it
-            if (gene_operation == -1):
-                continue
-
-            # add the gene we are working with to active genes
-            active_genes_indexes.append(gene_index_to_search)
-
-            # in case of output gene, save it to active genes, and continue
-            if (gene_operation == -2):
-                input_gene_index = gene[1]
-                if (not added_to_active_flag[input_gene_index]):
-                    # mark the input of this gene as active, and add it to active genes
-                    added_to_active_flag[input_gene_index] = True
-                    new_indexes_to_search.append(input_gene_index)
-                continue
-
-            # function genes
-            for i in range(1, 1 + op_inputs[operations[gene_operation]]): # for each input that the operation of this gene has
-                input_gene_index = gene[i] # in case of output gene, use only the first input
-                if (not added_to_active_flag[input_gene_index]):
-                    # mark the input of this gene as active, and add it to genes to search next
-                    added_to_active_flag[input_gene_index] = True
-                    new_indexes_to_search.append(input_gene_index)
-
-        found_new_gene = len(new_indexes_to_search) != 0 # if there are no new genes to search, stop the loop
-        gene_indexes_to_search = new_indexes_to_search # reassign the genes to search
-
-    return active_genes_indexes
-
-def genome_output(genome: List[List[int]], input_matrix: np.ndarray[np.ndarray[int | float]]) -&gt; np.ndarray[float | int]:
+def genome_output(genome, active_gene_indexes, input_matrix):
     &#39;&#39;&#39;[summary]
     ### Parameters
-    1. genome: List[List[int]]
+    1. genome
         - genome to calculate output for
-    2. input_matrix: np.ndarray[np.ndarray[int | float]]
+    2. input_matrix
         - list of input values to calculate output for
         - each list of input values is one input
 
@@ -103,8 +47,6 @@ def genome_output(genome: List[List[int]], input_matrix: np.ndarray[np.ndarray[i
         - output of genome for given input values
         - works with only one output gene (TODO if necessary)
     &#39;&#39;&#39;
-    output_gene_indexes = get_output_gene_indexes(genome)
-    active_gene_indexes = get_active_gene_indexes(genome, output_gene_indexes)
     n_input_nodes = len(input_matrix) # gen number of input nodes, base on parameter input_matrix
     nrows = len(active_gene_indexes) + n_input_nodes # number of rows in matrix
     ncols = len(input_matrix[0]) # number of columns in matrix
@@ -150,39 +92,42 @@ def genome_output(genome: List[List[int]], input_matrix: np.ndarray[np.ndarray[i
     # return the last column (output column) of the matrix
     return matrix[-1]
 
-def evaluate_fitness(genome: List[List[int]], input_matrix: np.ndarray[np.ndarray[int | float]], wanted_output: np.ndarray[float | int]) -&gt; float:
+def evaluate_fitness(genome, genome_active_path_indexes, input_matrix, wanted_output, max_difference=0.01):
     &#39;&#39;&#39;[summary]
     Returns fitness of genome for given input values and wanted output.
-    Fitness value is calculated as mean squared error between wanted output and output of genome for given input values.
+    Fitness value is calculated as mean absolute error between wanted output and output of genome for given input values.
     ### Parameters
-    1. genome: List[List[int]]
+    1. genome
         - genome to calculate fitness for
-    2. input_matrix: np.ndarray[np.ndarray[int | float]]
+    2. input_matrix
         - list of input values to calculate output for
         - each list of input values is one input
-    3. wanted_output: np.ndarray[float | int]
+    3. wanted_output
         - list of wanted output values
     ### Returns
     float
         - fitness of genome for given input values and wanted output
         - value &gt;= 0.0
     &#39;&#39;&#39;
-    output = genome_output(genome, input_matrix)
-    mse = mean_squared_error(wanted_output, output)
-    if (mse &lt; 0):
+    output = genome_output(genome, genome_active_path_indexes, input_matrix)
+    mae = np.absolute(np.subtract(wanted_output, output)).sum()
+    if (mae &lt; 0):
         raise ValueError(&#34;overflow, mean squared error is negative, something went wrong with the fitness calculation&#34;)
-    return mse
+    is_acceptable = is_acceptable_solution(output, wanted_output, max_difference)
+    return mae, is_acceptable
 
-def mutate_individual(target: List[List[int]], ncolumns: int, nrows: int) -&gt; List[List[int]]:
+def mutate_individual(target, ncolumns, nrows, mutation_rate):
     &#39;&#39;&#39;[summary]
     Returns mutated individual, without changing the original
     ### Parameters
-    1. target: List[List[int]]
+    1. target
         - individual to mutate
-    2. ncolumns: int
+    2. ncolumns
         - number of columns in the matrix of genes
-    3. nrows: int
+    3. nrows
         - number of rows in the matrix of genes
+    4. mutation_rate
+        - mutation rate of the algorithm
     ### Returns
     List[List[int]]
         - mutated individual
@@ -206,17 +151,17 @@ def mutate_individual(target: List[List[int]], ncolumns: int, nrows: int) -&gt; 
 
     return individual
 
-def mutate_gene(gene: List[int], gene_index: int, ncolumns: int, nrows: int) -&gt; tuple[List[int], bool]:
+def mutate_gene(gene, gene_index, ncolumns, nrows):
     &#39;&#39;&#39;[summary]
     Returns mutated gene (may mutate the original)
     ### Parameters
-    1. gene: List[int]
+    1. gene
         - gene to mutate
-    2. gene_index: int
+    2. gene_index
         - index of the gene in the genome
-    3. ncolumns: int
+    3. ncolumns
         - number of columns in the matrix of genes
-    4. nrows: int
+    4. nrows
         - number of rows in the matrix of genes
     ### Returns
     List[int]
@@ -253,10 +198,159 @@ def mutate_gene(gene: List[int], gene_index: int, ncolumns: int, nrows: int) -&g
 
         # if the gene was successfully mutated, stop the loop
         if original != mutated:
+            # in case the mutation is changing the operation, prepare the inputs for the new operation
+            if allele_to_mutate == 0:
+                format_inputs_for_new_operation(gene, gene_index, mutated, nrows)
             gene[allele_to_mutate] = mutated
             mutation_to_be_done = False
 
-    return gene, True</code></pre>
+    return gene, True
+
+def active_gene_transplant(receiver, receiver_active_path, donor, donor_active_path, exchange_rate, nrows = 1):
+    &#39;&#39;&#39;[summary]
+    Returns child genome from two parent genomes using recombination 1
+    ### Parameters
+    1. donor
+        - first parent genome
+    2. receiver
+        - second parent genome
+    ### Returns
+    List[List[int]]
+        - child genome
+    &#39;&#39;&#39;
+    # deep copy the parents, so we don&#39;t change the original
+    child = deepcopy(receiver)
+
+    exchange_indexes = [gene for gene in donor_active_path if gene not in receiver_active_path and random_bool(exchange_rate)]
+    for exchange_index in exchange_indexes:
+        donor_gene = donor[exchange_index].copy()
+        child[exchange_index] = donor_gene
+
+    return child
+
+def subgraph_exchange(receiver, receiver_active_path, donor, donor_active_path, exchange_rate, nrows):
+    &#39;&#39;&#39;[summary]
+    Returns child genome from two parent genomes using recombination 2
+    ### Parameters
+    1. parent1
+        - first parent genome
+    2. parent2
+        - second parent genome
+    ### Returns
+    List[List[int]]
+        - child genome
+    &#39;&#39;&#39;
+
+    # deep copy the parents, so we don&#39;t change the original
+    child = deepcopy(receiver)
+
+    possible_exchange_indexes = [gene for gene in receiver_active_path if gene in donor_active_path]
+    exchange_index = np.random.choice(possible_exchange_indexes)
+
+    receiver_flags = [False for _ in range(len(receiver))]
+    exchange(receiver=child, receiver_flags=receiver_flags, receiver_index=exchange_index, donor=donor, donor_index=exchange_index, exchange_rate=exchange_rate, nrows=nrows)
+    return child
+
+
+def exchange(receiver, receiver_flags, receiver_index, donor, donor_index, exchange_rate, nrows):
+    &#39;&#39;&#39;[summary]
+    Recursively exchanges the genes between the receiver and the donor
+    ### Parameters
+    1. receiver
+        - genome of the receiver
+    2. receiver_flags
+        - flags for each gene in receiver, if it was already exchanged
+    3. receiver_index
+        - index of the gene in the receiver
+    4. donor
+        - genome of the donor
+    5. donor_index
+        - index of the gene in the donor
+    6. exchange_rate
+        - exchange rate of the algorithm
+    7. nrows
+        - number of rows in the matrix of genes
+    ### Returns
+    None
+    &#39;&#39;&#39;
+    if receiver_flags[receiver_index]:
+        return
+    
+    receiver_gene = receiver[receiver_index]
+    donor_gene = donor[donor_index]
+    if is_input_gene(receiver_gene) or is_input_gene(donor_gene):
+        return
+    
+    if is_output_gene(receiver_gene):
+        if is_output_gene(donor_gene):
+            exchange(receiver=receiver,
+                        receiver_flags=receiver_flags,
+                        receiver_index=receiver_gene[1],
+                        donor=donor,
+                        donor_index=donor_gene[1],
+                        exchange_rate=exchange_rate,
+                        nrows=nrows)
+            return
+        else:
+            raise Exception(&#34;output gene mismatch in subgraph exchange&#34;)
+        
+    next_receiver_genes = []
+    next_donor_genes = []
+    for i in range(1, len(receiver_gene)):
+        if receiver_gene[i] != -1 and donor_gene[i] != -1 and random_bool(exchange_rate):
+            next_receiver_genes.append(receiver_gene[i])
+            next_donor_genes.append(donor_gene[i])
+    
+    format_inputs_for_new_operation(receiver[receiver_index], receiver_index, donor_gene[0], nrows)
+    receiver_gene[0] = donor_gene[0]
+    receiver_flags[receiver_index] = True
+
+    for i in range(len(next_receiver_genes)):
+        exchange(receiver=receiver,
+                    receiver_flags=receiver_flags,
+                    receiver_index=next_receiver_genes[i],
+                    donor=donor,
+                    donor_index=next_donor_genes[i],
+                    exchange_rate=exchange_rate,
+                    nrows=nrows)
+
+def format_inputs_for_new_operation(gene, gene_index, new_operation, nrows):
+    &#39;&#39;&#39;[summary]
+    Prepares the given gene for a change of operation allele, by changing the inputs to match the new operation.
+    Shortened inputs are set to -1, if a new input is needed, it is set to a random (in bounds) value.
+    ### Parameters
+    1. gene
+        - gene to prepare inputs for
+    2. gene_index
+        - index of the gene to prepare in given genome
+    3. operation
+        - new operation to be inside gene
+    4. nrows
+        - number of rows in the matrix of genes
+    &#39;&#39;&#39;
+    ncolumns = len(gene) / nrows
+    operation_inputs = get_number_of_op_inputs(new_operation)
+    for input_number in range(1, len(gene)):
+        if input_number &lt;= operation_inputs and gene[input_number] == -1:
+            gene[input_number] = np.random.randint(get_last_possible_input_index(ncolumns, nrows, gene_index))
+        elif input_number &gt; operation_inputs and gene[input_number] != -1:
+            gene[input_number] = -1
+
+def is_acceptable_solution(output, wanted_output, max_difference):
+    &#39;&#39;&#39;[summary]
+    Returns True if the difference between output and wanted_output is less than max_difference, False otherwise
+    ### Parameters
+    1. output
+        - output to compare
+    2. wanted_output
+        - wanted output to compare
+    3. max_difference
+        - maximum difference between output and wanted_output
+    ### Returns
+    bool
+        - True if the difference between output and wanted_output is less than max_difference, False otherwise
+    &#39;&#39;&#39;
+    return np.absolute(np.subtract(wanted_output, output)).max() &lt;= max_difference</code></pre>
 </details>
 </section>
 <section>
@@ -266,25 +360,72 @@ def mutate_gene(gene: List[int], gene_index: int, ncolumns: int, nrows: int) -&g
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="genome.active_gene_transplant"><code class="name flex">
+<span>def <span class="ident">active_gene_transplant</span></span>(<span>receiver, receiver_active_path, donor, donor_active_path, exchange_rate, nrows=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Returns child genome from two parent genomes using recombination 1</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>donor<ul>
+<li>first parent genome</li>
+</ul>
+</li>
+<li>receiver<ul>
+<li>second parent genome</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>List[List[int]]
+- child genome</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def active_gene_transplant(receiver, receiver_active_path, donor, donor_active_path, exchange_rate, nrows = 1):
+    &#39;&#39;&#39;[summary]
+    Returns child genome from two parent genomes using recombination 1
+    ### Parameters
+    1. donor
+        - first parent genome
+    2. receiver
+        - second parent genome
+    ### Returns
+    List[List[int]]
+        - child genome
+    &#39;&#39;&#39;
+    # deep copy the parents, so we don&#39;t change the original
+    child = deepcopy(receiver)
+
+    exchange_indexes = [gene for gene in donor_active_path if gene not in receiver_active_path and random_bool(exchange_rate)]
+    for exchange_index in exchange_indexes:
+        donor_gene = donor[exchange_index].copy()
+        child[exchange_index] = donor_gene
+
+    return child</code></pre>
+</details>
+</dd>
 <dt id="genome.evaluate_fitness"><code class="name flex">
-<span>def <span class="ident">evaluate_fitness</span></span>(<span>genome: List[List[int]], input_matrix: numpy.ndarray[numpy.ndarray[int | float]], wanted_output: numpy.ndarray[float | int]) ‑> float</span>
+<span>def <span class="ident">evaluate_fitness</span></span>(<span>genome, genome_active_path_indexes, input_matrix, wanted_output, max_difference=0.01)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>[summary]
 Returns fitness of genome for given input values and wanted output.
-Fitness value is calculated as mean squared error between wanted output and output of genome for given input values.</p>
+Fitness value is calculated as mean absolute error between wanted output and output of genome for given input values.</p>
 <h3 id="parameters">Parameters</h3>
 <ol>
-<li>genome: List[List[int]]<ul>
+<li>genome<ul>
 <li>genome to calculate fitness for</li>
 </ul>
 </li>
-<li>input_matrix: np.ndarray[np.ndarray[int | float]]<ul>
+<li>input_matrix<ul>
 <li>list of input values to calculate output for</li>
 <li>each list of input values is one input</li>
 </ul>
 </li>
-<li>wanted_output: np.ndarray[float | int]<ul>
+<li>wanted_output<ul>
 <li>list of wanted output values</li>
 </ul>
 </li>
@@ -297,42 +438,202 @@ Fitness value is calculated as mean squared error between wanted output and outp
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def evaluate_fitness(genome: List[List[int]], input_matrix: np.ndarray[np.ndarray[int | float]], wanted_output: np.ndarray[float | int]) -&gt; float:
+<pre><code class="python">def evaluate_fitness(genome, genome_active_path_indexes, input_matrix, wanted_output, max_difference=0.01):
     &#39;&#39;&#39;[summary]
     Returns fitness of genome for given input values and wanted output.
-    Fitness value is calculated as mean squared error between wanted output and output of genome for given input values.
+    Fitness value is calculated as mean absolute error between wanted output and output of genome for given input values.
     ### Parameters
-    1. genome: List[List[int]]
+    1. genome
         - genome to calculate fitness for
-    2. input_matrix: np.ndarray[np.ndarray[int | float]]
+    2. input_matrix
         - list of input values to calculate output for
         - each list of input values is one input
-    3. wanted_output: np.ndarray[float | int]
+    3. wanted_output
         - list of wanted output values
     ### Returns
     float
         - fitness of genome for given input values and wanted output
         - value &gt;= 0.0
     &#39;&#39;&#39;
-    output = genome_output(genome, input_matrix)
-    mse = mean_squared_error(wanted_output, output)
-    if (mse &lt; 0):
+    output = genome_output(genome, genome_active_path_indexes, input_matrix)
+    mae = np.absolute(np.subtract(wanted_output, output)).sum()
+    if (mae &lt; 0):
         raise ValueError(&#34;overflow, mean squared error is negative, something went wrong with the fitness calculation&#34;)
-    return mse</code></pre>
+    is_acceptable = is_acceptable_solution(output, wanted_output, max_difference)
+    return mae, is_acceptable</code></pre>
+</details>
+</dd>
+<dt id="genome.exchange"><code class="name flex">
+<span>def <span class="ident">exchange</span></span>(<span>receiver, receiver_flags, receiver_index, donor, donor_index, exchange_rate, nrows)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Recursively exchanges the genes between the receiver and the donor</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>receiver<ul>
+<li>genome of the receiver</li>
+</ul>
+</li>
+<li>receiver_flags<ul>
+<li>flags for each gene in receiver, if it was already exchanged</li>
+</ul>
+</li>
+<li>receiver_index<ul>
+<li>index of the gene in the receiver</li>
+</ul>
+</li>
+<li>donor<ul>
+<li>genome of the donor</li>
+</ul>
+</li>
+<li>donor_index<ul>
+<li>index of the gene in the donor</li>
+</ul>
+</li>
+<li>exchange_rate<ul>
+<li>exchange rate of the algorithm</li>
+</ul>
+</li>
+<li>nrows<ul>
+<li>number of rows in the matrix of genes</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def exchange(receiver, receiver_flags, receiver_index, donor, donor_index, exchange_rate, nrows):
+    &#39;&#39;&#39;[summary]
+    Recursively exchanges the genes between the receiver and the donor
+    ### Parameters
+    1. receiver
+        - genome of the receiver
+    2. receiver_flags
+        - flags for each gene in receiver, if it was already exchanged
+    3. receiver_index
+        - index of the gene in the receiver
+    4. donor
+        - genome of the donor
+    5. donor_index
+        - index of the gene in the donor
+    6. exchange_rate
+        - exchange rate of the algorithm
+    7. nrows
+        - number of rows in the matrix of genes
+    ### Returns
+    None
+    &#39;&#39;&#39;
+    if receiver_flags[receiver_index]:
+        return
+    
+    receiver_gene = receiver[receiver_index]
+    donor_gene = donor[donor_index]
+    if is_input_gene(receiver_gene) or is_input_gene(donor_gene):
+        return
+    
+    if is_output_gene(receiver_gene):
+        if is_output_gene(donor_gene):
+            exchange(receiver=receiver,
+                        receiver_flags=receiver_flags,
+                        receiver_index=receiver_gene[1],
+                        donor=donor,
+                        donor_index=donor_gene[1],
+                        exchange_rate=exchange_rate,
+                        nrows=nrows)
+            return
+        else:
+            raise Exception(&#34;output gene mismatch in subgraph exchange&#34;)
+        
+    next_receiver_genes = []
+    next_donor_genes = []
+    for i in range(1, len(receiver_gene)):
+        if receiver_gene[i] != -1 and donor_gene[i] != -1 and random_bool(exchange_rate):
+            next_receiver_genes.append(receiver_gene[i])
+            next_donor_genes.append(donor_gene[i])
+    
+    format_inputs_for_new_operation(receiver[receiver_index], receiver_index, donor_gene[0], nrows)
+    receiver_gene[0] = donor_gene[0]
+    receiver_flags[receiver_index] = True
+
+    for i in range(len(next_receiver_genes)):
+        exchange(receiver=receiver,
+                    receiver_flags=receiver_flags,
+                    receiver_index=next_receiver_genes[i],
+                    donor=donor,
+                    donor_index=next_donor_genes[i],
+                    exchange_rate=exchange_rate,
+                    nrows=nrows)</code></pre>
+</details>
+</dd>
+<dt id="genome.format_inputs_for_new_operation"><code class="name flex">
+<span>def <span class="ident">format_inputs_for_new_operation</span></span>(<span>gene, gene_index, new_operation, nrows)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Prepares the given gene for a change of operation allele, by changing the inputs to match the new operation.
+Shortened inputs are set to -1, if a new input is needed, it is set to a random (in bounds) value.</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>gene<ul>
+<li>gene to prepare inputs for</li>
+</ul>
+</li>
+<li>gene_index<ul>
+<li>index of the gene to prepare in given genome</li>
+</ul>
+</li>
+<li>operation<ul>
+<li>new operation to be inside gene</li>
+</ul>
+</li>
+<li>nrows<ul>
+<li>number of rows in the matrix of genes</li>
+</ul>
+</li>
+</ol></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def format_inputs_for_new_operation(gene, gene_index, new_operation, nrows):
+    &#39;&#39;&#39;[summary]
+    Prepares the given gene for a change of operation allele, by changing the inputs to match the new operation.
+    Shortened inputs are set to -1, if a new input is needed, it is set to a random (in bounds) value.
+    ### Parameters
+    1. gene
+        - gene to prepare inputs for
+    2. gene_index
+        - index of the gene to prepare in given genome
+    3. operation
+        - new operation to be inside gene
+    4. nrows
+        - number of rows in the matrix of genes
+    &#39;&#39;&#39;
+    ncolumns = len(gene) / nrows
+    operation_inputs = get_number_of_op_inputs(new_operation)
+    for input_number in range(1, len(gene)):
+        if input_number &lt;= operation_inputs and gene[input_number] == -1:
+            gene[input_number] = np.random.randint(get_last_possible_input_index(ncolumns, nrows, gene_index))
+        elif input_number &gt; operation_inputs and gene[input_number] != -1:
+            gene[input_number] = -1</code></pre>
 </details>
 </dd>
 <dt id="genome.genome_output"><code class="name flex">
-<span>def <span class="ident">genome_output</span></span>(<span>genome: List[List[int]], input_matrix: numpy.ndarray[numpy.ndarray[int | float]]) ‑> numpy.ndarray[float | int]</span>
+<span>def <span class="ident">genome_output</span></span>(<span>genome, active_gene_indexes, input_matrix)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>[summary]</p>
 <h3 id="parameters">Parameters</h3>
 <ol>
-<li>genome: List[List[int]]<ul>
+<li>genome<ul>
 <li>genome to calculate output for</li>
 </ul>
 </li>
-<li>input_matrix: np.ndarray[np.ndarray[int | float]]<ul>
+<li>input_matrix<ul>
 <li>list of input values to calculate output for</li>
 <li>each list of input values is one input</li>
 </ul>
@@ -346,12 +647,12 @@ Fitness value is calculated as mean squared error between wanted output and outp
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def genome_output(genome: List[List[int]], input_matrix: np.ndarray[np.ndarray[int | float]]) -&gt; np.ndarray[float | int]:
+<pre><code class="python">def genome_output(genome, active_gene_indexes, input_matrix):
     &#39;&#39;&#39;[summary]
     ### Parameters
-    1. genome: List[List[int]]
+    1. genome
         - genome to calculate output for
-    2. input_matrix: np.ndarray[np.ndarray[int | float]]
+    2. input_matrix
         - list of input values to calculate output for
         - each list of input values is one input
 
@@ -360,8 +661,6 @@ Fitness value is calculated as mean squared error between wanted output and outp
         - output of genome for given input values
         - works with only one output gene (TODO if necessary)
     &#39;&#39;&#39;
-    output_gene_indexes = get_output_gene_indexes(genome)
-    active_gene_indexes = get_active_gene_indexes(genome, output_gene_indexes)
     n_input_nodes = len(input_matrix) # gen number of input nodes, base on parameter input_matrix
     nrows = len(active_gene_indexes) + n_input_nodes # number of rows in matrix
     ncols = len(input_matrix[0]) # number of columns in matrix
@@ -408,105 +707,72 @@ Fitness value is calculated as mean squared error between wanted output and outp
     return matrix[-1]</code></pre>
 </details>
 </dd>
-<dt id="genome.get_active_gene_indexes"><code class="name flex">
-<span>def <span class="ident">get_active_gene_indexes</span></span>(<span>genome: List[List[int]], output_gene_indexes: List[int]) ‑> List[int]</span>
+<dt id="genome.is_acceptable_solution"><code class="name flex">
+<span>def <span class="ident">is_acceptable_solution</span></span>(<span>output, wanted_output, max_difference)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>[summary]
-Returns indexes of active genes in genome</p>
+Returns True if the difference between output and wanted_output is less than max_difference, False otherwise</p>
 <h3 id="parameters">Parameters</h3>
 <ol>
-<li>genome: List[List[int]]<ul>
-<li>genome to search active genes in</li>
+<li>output<ul>
+<li>output to compare</li>
 </ul>
 </li>
-<li>output_gene_indexes: List[int]<ul>
-<li>list of indexes of output genes</li>
+<li>wanted_output<ul>
+<li>wanted output to compare</li>
+</ul>
+</li>
+<li>max_difference<ul>
+<li>maximum difference between output and wanted_output</li>
 </ul>
 </li>
 </ol>
 <h3 id="returns">Returns</h3>
-<p>List[int]
-- list of indexes of active genes in genome</p></div>
+<p>bool
+- True if the difference between output and wanted_output is less than max_difference, False otherwise</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_active_gene_indexes(genome: List[List[int]], output_gene_indexes: List[int]) -&gt; List[int]:
+<pre><code class="python">def is_acceptable_solution(output, wanted_output, max_difference):
     &#39;&#39;&#39;[summary]
-    Returns indexes of active genes in genome
+    Returns True if the difference between output and wanted_output is less than max_difference, False otherwise
     ### Parameters
-    1. genome: List[List[int]]
-        - genome to search active genes in
-    2. output_gene_indexes: List[int]
-        - list of indexes of output genes
-
+    1. output
+        - output to compare
+    2. wanted_output
+        - wanted output to compare
+    3. max_difference
+        - maximum difference between output and wanted_output
     ### Returns
-    List[int]
-        - list of indexes of active genes in genome
+    bool
+        - True if the difference between output and wanted_output is less than max_difference, False otherwise
     &#39;&#39;&#39;
-    active_genes_indexes = []
-    added_to_active_flag = [False] * len(genome) # flag for each gene if it was added to active genes
-
-    found_new_gene = True
-    gene_indexes_to_search = output_gene_indexes.copy()
-    while (found_new_gene):
-        new_indexes_to_search = []
-        for gene_index_to_search in gene_indexes_to_search:
-            gene = genome[gene_index_to_search]
-            gene_operation = gene[0]
-
-            # in case of input gene, skip it
-            if (gene_operation == -1):
-                continue
-
-            # add the gene we are working with to active genes
-            active_genes_indexes.append(gene_index_to_search)
-
-            # in case of output gene, save it to active genes, and continue
-            if (gene_operation == -2):
-                input_gene_index = gene[1]
-                if (not added_to_active_flag[input_gene_index]):
-                    # mark the input of this gene as active, and add it to active genes
-                    added_to_active_flag[input_gene_index] = True
-                    new_indexes_to_search.append(input_gene_index)
-                continue
-
-            # function genes
-            for i in range(1, 1 + op_inputs[operations[gene_operation]]): # for each input that the operation of this gene has
-                input_gene_index = gene[i] # in case of output gene, use only the first input
-                if (not added_to_active_flag[input_gene_index]):
-                    # mark the input of this gene as active, and add it to genes to search next
-                    added_to_active_flag[input_gene_index] = True
-                    new_indexes_to_search.append(input_gene_index)
-
-        found_new_gene = len(new_indexes_to_search) != 0 # if there are no new genes to search, stop the loop
-        gene_indexes_to_search = new_indexes_to_search # reassign the genes to search
-
-    return active_genes_indexes</code></pre>
+    return np.absolute(np.subtract(wanted_output, output)).max() &lt;= max_difference</code></pre>
 </details>
 </dd>
 <dt id="genome.mutate_gene"><code class="name flex">
-<span>def <span class="ident">mutate_gene</span></span>(<span>gene: List[int], gene_index: int, ncolumns: int, nrows: int) ‑> tuple[typing.List[int], bool]</span>
+<span>def <span class="ident">mutate_gene</span></span>(<span>gene, gene_index, ncolumns, nrows)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>[summary]
 Returns mutated gene (may mutate the original)</p>
 <h3 id="parameters">Parameters</h3>
 <ol>
-<li>gene: List[int]<ul>
+<li>gene<ul>
 <li>gene to mutate</li>
 </ul>
 </li>
-<li>gene_index: int<ul>
+<li>gene_index<ul>
 <li>index of the gene in the genome</li>
 </ul>
 </li>
-<li>ncolumns: int<ul>
+<li>ncolumns<ul>
 <li>number of columns in the matrix of genes</li>
 </ul>
 </li>
-<li>nrows: int<ul>
+<li>nrows<ul>
 <li>number of rows in the matrix of genes</li>
 </ul>
 </li>
@@ -529,17 +795,17 @@ Raises</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def mutate_gene(gene: List[int], gene_index: int, ncolumns: int, nrows: int) -&gt; tuple[List[int], bool]:
+<pre><code class="python">def mutate_gene(gene, gene_index, ncolumns, nrows):
     &#39;&#39;&#39;[summary]
     Returns mutated gene (may mutate the original)
     ### Parameters
-    1. gene: List[int]
+    1. gene
         - gene to mutate
-    2. gene_index: int
+    2. gene_index
         - index of the gene in the genome
-    3. ncolumns: int
+    3. ncolumns
         - number of columns in the matrix of genes
-    4. nrows: int
+    4. nrows
         - number of rows in the matrix of genes
     ### Returns
     List[int]
@@ -576,6 +842,9 @@ Raises</p>
 
         # if the gene was successfully mutated, stop the loop
         if original != mutated:
+            # in case the mutation is changing the operation, prepare the inputs for the new operation
+            if allele_to_mutate == 0:
+                format_inputs_for_new_operation(gene, gene_index, mutated, nrows)
             gene[allele_to_mutate] = mutated
             mutation_to_be_done = False
 
@@ -583,23 +852,27 @@ Raises</p>
 </details>
 </dd>
 <dt id="genome.mutate_individual"><code class="name flex">
-<span>def <span class="ident">mutate_individual</span></span>(<span>target: List[List[int]], ncolumns: int, nrows: int) ‑> List[List[int]]</span>
+<span>def <span class="ident">mutate_individual</span></span>(<span>target, ncolumns, nrows, mutation_rate)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>[summary]
 Returns mutated individual, without changing the original</p>
 <h3 id="parameters">Parameters</h3>
 <ol>
-<li>target: List[List[int]]<ul>
+<li>target<ul>
 <li>individual to mutate</li>
 </ul>
 </li>
-<li>ncolumns: int<ul>
+<li>ncolumns<ul>
 <li>number of columns in the matrix of genes</li>
 </ul>
 </li>
-<li>nrows: int<ul>
+<li>nrows<ul>
 <li>number of rows in the matrix of genes</li>
+</ul>
+</li>
+<li>mutation_rate<ul>
+<li>mutation rate of the algorithm</li>
 </ul>
 </li>
 </ol>
@@ -610,16 +883,18 @@ Returns mutated individual, without changing the original</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def mutate_individual(target: List[List[int]], ncolumns: int, nrows: int) -&gt; List[List[int]]:
+<pre><code class="python">def mutate_individual(target, ncolumns, nrows, mutation_rate):
     &#39;&#39;&#39;[summary]
     Returns mutated individual, without changing the original
     ### Parameters
-    1. target: List[List[int]]
+    1. target
         - individual to mutate
-    2. ncolumns: int
+    2. ncolumns
         - number of columns in the matrix of genes
-    3. nrows: int
+    3. nrows
         - number of rows in the matrix of genes
+    4. mutation_rate
+        - mutation rate of the algorithm
     ### Returns
     List[List[int]]
         - mutated individual
@@ -644,6 +919,54 @@ Returns mutated individual, without changing the original</p>
     return individual</code></pre>
 </details>
 </dd>
+<dt id="genome.subgraph_exchange"><code class="name flex">
+<span>def <span class="ident">subgraph_exchange</span></span>(<span>receiver, receiver_active_path, donor, donor_active_path, exchange_rate, nrows)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Returns child genome from two parent genomes using recombination 2</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>parent1<ul>
+<li>first parent genome</li>
+</ul>
+</li>
+<li>parent2<ul>
+<li>second parent genome</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>List[List[int]]
+- child genome</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def subgraph_exchange(receiver, receiver_active_path, donor, donor_active_path, exchange_rate, nrows):
+    &#39;&#39;&#39;[summary]
+    Returns child genome from two parent genomes using recombination 2
+    ### Parameters
+    1. parent1
+        - first parent genome
+    2. parent2
+        - second parent genome
+    ### Returns
+    List[List[int]]
+        - child genome
+    &#39;&#39;&#39;
+
+    # deep copy the parents, so we don&#39;t change the original
+    child = deepcopy(receiver)
+
+    possible_exchange_indexes = [gene for gene in receiver_active_path if gene in donor_active_path]
+    exchange_index = np.random.choice(possible_exchange_indexes)
+
+    receiver_flags = [False for _ in range(len(receiver))]
+    exchange(receiver=child, receiver_flags=receiver_flags, receiver_index=exchange_index, donor=donor, donor_index=exchange_index, exchange_rate=exchange_rate, nrows=nrows)
+    return child</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -657,11 +980,15 @@ Returns mutated individual, without changing the original</p>
 <ul id="index">
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="genome.active_gene_transplant" href="#genome.active_gene_transplant">active_gene_transplant</a></code></li>
 <li><code><a title="genome.evaluate_fitness" href="#genome.evaluate_fitness">evaluate_fitness</a></code></li>
+<li><code><a title="genome.exchange" href="#genome.exchange">exchange</a></code></li>
+<li><code><a title="genome.format_inputs_for_new_operation" href="#genome.format_inputs_for_new_operation">format_inputs_for_new_operation</a></code></li>
 <li><code><a title="genome.genome_output" href="#genome.genome_output">genome_output</a></code></li>
-<li><code><a title="genome.get_active_gene_indexes" href="#genome.get_active_gene_indexes">get_active_gene_indexes</a></code></li>
+<li><code><a title="genome.is_acceptable_solution" href="#genome.is_acceptable_solution">is_acceptable_solution</a></code></li>
 <li><code><a title="genome.mutate_gene" href="#genome.mutate_gene">mutate_gene</a></code></li>
 <li><code><a title="genome.mutate_individual" href="#genome.mutate_individual">mutate_individual</a></code></li>
+<li><code><a title="genome.subgraph_exchange" href="#genome.subgraph_exchange">subgraph_exchange</a></code></li>
 </ul>
 </li>
 </ul>

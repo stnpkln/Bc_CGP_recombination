@@ -1,29 +1,36 @@
-# Bc_CGP_recombination
+# Bachelor thesis
 
-Bakalářská práce na téma "Využití operátoru křížení v kartézském genetickém programování"
+Practical part of bachelor thesis called "USE OF THE CROSSOVER OPERATOR IN CARTESIAN GENETIC PROGRAMMING".
 
-# Plán
-- dořešit TODOčka v kódu ***DONE***
-- více protestovat (ověřit validitu výstupu algoritmu) ***DONE***
-- nastavit parametry tak aby byly vhodné ? ASI ***DONE*** ?
-- experimentovat s klasickým CGP - 1 + lambda ***DONE***
-- vyřešit generování dokumentace (nejspíš sphynx) ***DONE***
-- vytvořit větve pro algoritmy křížení ***DONE***
-- otestovat, zjistit nejlepší parametry
-- začít psát bakalářskou práci
-   - nadpisy
-   - úvod (CGP obecně, CGP křížení...)
+This code and data does not correspond to the final thesis 1:1, but its very close.
 
-## testování
-- v /src spustit `python -m unittest`
+## Abstract
+The aim of this work is to propose and implement two new crossover methods in Cartesian
+Genetic Programming (CGP) and compare them with existing approaches. CGP is a type
+of evolutionary algorithm that uses acyclic graphs to represent executable programs. Most
+CGP applications use the mutation operator only, but the effort to find a suitable crossover
+operator is still ongoing. In this work, the two newly proposed crossover methods are
+compared on five symbolic regression problems against the standard 1 + 𝜆 procedure based
+purely on mutation. Experimental results show that these methods find solutions in a similar
+number of fitness evaluations as 1 + 𝜆 and, in two cases, even significantly earlier.
 
-## dokumentace
-- v /docs
-- generování: `./generate-docs.sh`
+## Running automated tests
+- in `/src` run `python -m unittest`
 
-### dotazy:
-- volba evolucni strategie ke krizeni 1 a 2
-- co vsechno za data bych mel sbirat pro vyhodnocovani za metriky
-- je 1e7 fitness evaluaci dostacujici pro metriky (vychazi to asi na 1-2 hodiny max)
-   - MOMENTALNE TO VYCHAZI: 400 minut na vsechny funkce * 3 algorytmy * 30 pokusu = 25 dni...
-   - u puvodniho clanku pouzili 10e8, ale to by dle mych vypoctu bylo na muj notas az moc
+## Generate documentation
+- in root folder run `./generate-docs.sh`
+
+## Running experiments
+- in folder `/src/experiment.py`:
+	- uncomment getCGPdata() (commented out because of an error in pdoc framework, which runs code when generating documentation)
+- run `python experiment.py`
+- experiment outputs will be in `data-general.csv` a `data-run-details.csv`
+
+## Data processing and visualizing
+- file `/src/graphs/data_visualizer`
+- run `python data_visualizer.py`. `data-general.csv` and `data-run-details.csv` must be in the folder you are running the program
+- script generates graphs in pdf format and a csv tablewith processed data of given algorithms
+
+Author: Petr Bromnik
+Thesis supervisor: Ing. Martin Hurta
+Date: April 2024

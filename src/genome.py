@@ -1,17 +1,21 @@
+'''
+File: genome.py
+Purpose: Contains the genome operations used in the CGP algorithm
+Author: Petr Bromnik
+'''
+
 from constants.operations import operations, op_inputs, op_functions
 from utils import get_last_possible_input_index, get_number_of_op_inputs, is_input_gene, is_output_gene, random_bool
-from typing import List
 import numpy as np
-from sklearn.metrics import mean_squared_error
 from copy import deepcopy
 from math import floor
 
-def genome_output(genome: List[List[int]], active_gene_indexes: List[int], input_matrix: np.ndarray[np.ndarray[int | float]]) -> np.ndarray[float | int]:
+def genome_output(genome, active_gene_indexes, input_matrix):
     '''[summary]
     ### Parameters
-    1. genome: List[List[int]]
+    1. genome
         - genome to calculate output for
-    2. input_matrix: np.ndarray[np.ndarray[int | float]]
+    2. input_matrix
         - list of input values to calculate output for
         - each list of input values is one input
 
@@ -65,17 +69,17 @@ def genome_output(genome: List[List[int]], active_gene_indexes: List[int], input
     # return the last column (output column) of the matrix
     return matrix[-1]
 
-def evaluate_fitness(genome: List[List[int]], genome_active_path_indexes: List[int], input_matrix: np.ndarray[np.ndarray[int | float]], wanted_output: np.ndarray[float | int]) -> float:
+def evaluate_fitness(genome, genome_active_path_indexes, input_matrix, wanted_output, max_difference=0.01):
     '''[summary]
     Returns fitness of genome for given input values and wanted output.
-    Fitness value is calculated as mean squared error between wanted output and output of genome for given input values.
+    Fitness value is calculated as mean absolute error between wanted output and output of genome for given input values.
     ### Parameters
-    1. genome: List[List[int]]
+    1. genome
         - genome to calculate fitness for
-    2. input_matrix: np.ndarray[np.ndarray[int | float]]
+    2. input_matrix
         - list of input values to calculate output for
         - each list of input values is one input
-    3. wanted_output: np.ndarray[float | int]
+    3. wanted_output
         - list of wanted output values
     ### Returns
     float
@@ -83,22 +87,23 @@ def evaluate_fitness(genome: List[List[int]], genome_active_path_indexes: List[i
         - value >= 0.0
     '''
     output = genome_output(genome, genome_active_path_indexes, input_matrix)
-    mse = mean_squared_error(wanted_output, output)
-    if (mse < 0):
+    mae = np.absolute(np.subtract(wanted_output, output)).sum()
+    if (mae < 0):
         raise ValueError("overflow, mean squared error is negative, something went wrong with the fitness calculation")
-    return mse
+    is_acceptable = is_acceptable_solution(output, wanted_output, max_difference)
+    return mae, is_acceptable
 
-def mutate_individual(target: List[List[int]], ncolumns: int, nrows: int, mutation_rate: int) -> List[List[int]]:
+def mutate_individual(target, ncolumns, nrows, mutation_rate):
     '''[summary]
     Returns mutated individual, without changing the original
     ### Parameters
-    1. target: List[List[int]]
+    1. target
         - individual to mutate
-    2. ncolumns: int
+    2. ncolumns
         - number of columns in the matrix of genes
-    3. nrows: int
+    3. nrows
         - number of rows in the matrix of genes
-    4. mutation_rate: int
+    4. mutation_rate
         - mutation rate of the algorithm
     ### Returns
     List[List[int]]
@@ -123,17 +128,17 @@ def mutate_individual(target: List[List[int]], ncolumns: int, nrows: int, mutati
 
     return individual
 
-def mutate_gene(gene: List[int], gene_index: int, ncolumns: int, nrows: int) -> tuple[List[int], bool]:
+def mutate_gene(gene, gene_index, ncolumns, nrows):
     '''[summary]
     Returns mutated gene (may mutate the original)
     ### Parameters
-    1. gene: List[int]
+    1. gene
         - gene to mutate
-    2. gene_index: int
+    2. gene_index
         - index of the gene in the genome
-    3. ncolumns: int
+    3. ncolumns
         - number of columns in the matrix of genes
-    4. nrows: int
+    4. nrows
         - number of rows in the matrix of genes
     ### Returns
     List[int]
@@ -178,13 +183,13 @@ def mutate_gene(gene: List[int], gene_index: int, ncolumns: int, nrows: int) -> 
 
     return gene, True
 
-def active_gene_transplant(receiver: List[List[int]], receiver_active_path: List[int], donor: List[List[int]], donor_active_path: List[int], exchange_rate: float, nrows = 1) -> List[List[int]]:
+def active_gene_transplant(receiver, receiver_active_path, donor, donor_active_path, exchange_rate, nrows = 1):
     '''[summary]
     Returns child genome from two parent genomes using recombination 1
     ### Parameters
-    1. donor: List[List[int]]
+    1. donor
         - first parent genome
-    2. receiver: List[List[int]]
+    2. receiver
         - second parent genome
     ### Returns
     List[List[int]]
@@ -200,13 +205,13 @@ def active_gene_transplant(receiver: List[List[int]], receiver_active_path: List
 
     return child
 
-def subgraph_exchange(receiver: List[List[int]], receiver_active_path: List[int], donor: List[List[int]], donor_active_path: List[int], exchange_rate: float, nrows: int) -> List[List[int]]:
+def subgraph_exchange(receiver, receiver_active_path, donor, donor_active_path, exchange_rate, nrows):
     '''[summary]
     Returns child genome from two parent genomes using recombination 2
     ### Parameters
-    1. parent1: List[List[int]]
+    1. parent1
         - first parent genome
-    2. parent2: List[List[int]]
+    2. parent2
         - second parent genome
     ### Returns
     List[List[int]]
@@ -224,7 +229,27 @@ def subgraph_exchange(receiver: List[List[int]], receiver_active_path: List[int]
     return child
 
 
-def exchange(receiver: List[List[int]], receiver_flags: List[bool], receiver_index: int, donor: List[List[int]], donor_index: int, exchange_rate: float, nrows: int) -> None:
+def exchange(receiver, receiver_flags, receiver_index, donor, donor_index, exchange_rate, nrows):
+    '''[summary]
+    Recursively exchanges the genes between the receiver and the donor
+    ### Parameters
+    1. receiver
+        - genome of the receiver
+    2. receiver_flags
+        - flags for each gene in receiver, if it was already exchanged
+    3. receiver_index
+        - index of the gene in the receiver
+    4. donor
+        - genome of the donor
+    5. donor_index
+        - index of the gene in the donor
+    6. exchange_rate
+        - exchange rate of the algorithm
+    7. nrows
+        - number of rows in the matrix of genes
+    ### Returns
+    None
+    '''
     if receiver_flags[receiver_index]:
         return
     
@@ -266,18 +291,18 @@ def exchange(receiver: List[List[int]], receiver_flags: List[bool], receiver_ind
                     exchange_rate=exchange_rate,
                     nrows=nrows)
 
-def format_inputs_for_new_operation(gene: List[int], gene_index: List[int], new_operation: int, nrows: int) -> None:
+def format_inputs_for_new_operation(gene, gene_index, new_operation, nrows):
     '''[summary]
     Prepares the given gene for a change of operation allele, by changing the inputs to match the new operation.
     Shortened inputs are set to -1, if a new input is needed, it is set to a random (in bounds) value.
     ### Parameters
-    1. gene: List[int]
+    1. gene
         - gene to prepare inputs for
-    2. gene_index: List[int]
+    2. gene_index
         - index of the gene to prepare in given genome
-    3. operation: int
+    3. operation
         - new operation to be inside gene
-    4. nrows: int
+    4. nrows
         - number of rows in the matrix of genes
     '''
     ncolumns = len(gene) / nrows
@@ -287,3 +312,19 @@ def format_inputs_for_new_operation(gene: List[int], gene_index: List[int], new_
             gene[input_number] = np.random.randint(get_last_possible_input_index(ncolumns, nrows, gene_index))
         elif input_number > operation_inputs and gene[input_number] != -1:
             gene[input_number] = -1
+
+def is_acceptable_solution(output, wanted_output, max_difference):
+    '''[summary]
+    Returns True if the difference between output and wanted_output is less than max_difference, False otherwise
+    ### Parameters
+    1. output
+        - output to compare
+    2. wanted_output
+        - wanted output to compare
+    3. max_difference
+        - maximum difference between output and wanted_output
+    ### Returns
+    bool
+        - True if the difference between output and wanted_output is less than max_difference, False otherwise
+    '''
+    return np.absolute(np.subtract(wanted_output, output)).max() <= max_difference

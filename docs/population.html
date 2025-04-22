@@ -27,24 +27,27 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from constants.operations import operations, op_inputs
-from utils import get_last_possible_input_index, get_number_of_gene_inputs
-from typing import List
+from genome import evaluate_fitness
+from utils import get_active_gene_indexes, get_last_possible_input_index, get_number_of_gene_inputs, get_output_gene_indexes
 import numpy as np
 
 class Population:
-    def __init__(self, population_size: int, ncolumns: int, nrows: int) -&gt; None:
+    def __init__(self, population_size, ncolumns, nrows, mutation_rate, input_matrix, wanted_output, nparents = 1, max_error = 0.01):
         &#39;&#39;&#39;[summary]
         Initializes the population with random genomes.
         ### Parameters
-        1. population_size: int
+        1. population_size
             - number of individuals in the population
             - must be &gt;= 1
-        2. ncolumns: int
+        2. ncolumns
             - number of columns in the genome
             - must be &gt;= 3
-        3. nrows: int
+        3. nrows
             - number of rows in the genome
             - must be &gt;= 1
+        4. mutation_rate
+            - mutation rate of the algorithm
+            - must be &gt;= 0 and &lt;= 1
         ### Raises
         ------
         ValueError
@@ -58,18 +61,30 @@ class Population:
             raise ValueError(&#34;nrows must be &gt;= 1&#34;)
         if ncolumns &lt; 3:
             raise ValueError(&#34;ncolumns must be &gt;= 3&#34;)
+        if mutation_rate &lt; 0 or mutation_rate &gt; 1:
+            raise ValueError(&#34;mutation_rate must be &gt;= 0 and &lt;= 1&#34;)
 
         self.nrows = nrows
         self.ncolumns = ncolumns
         self.population = self.get_starting_popultation(population_size)
-        self.parent_index = 0
-        self.children_indexes = [i for i in range(1, population_size)]
+        self.nparents = nparents
+        self.children_indexes = [i for i in range(nparents, population_size)] # 1 becouse its only for children (minus parent with index 0)
+        self.mutation_rate = mutation_rate
+        self.active_paths = [[] for i in range(population_size)]
+        self.fitnesses = [np.inf for i in range(population_size)]
+        self.input_matrix = input_matrix
+        self.wanted_output = wanted_output
+        self.population_size = population_size
+        self.max_error = max_error
+        self.solution_index = None
+        self.reset_all_active_paths()
+        self.calculate_fitness_all()
 
-    def get_starting_popultation(self, population_size: int) -&gt; List[List[List[int]]]:
+    def get_starting_popultation(self, population_size):
         &#39;&#39;&#39;[summary]
         Returns a list of random genomes (population).
         ### Parameters
-        1. population_size: int
+        1. population_size
             - number of individuals in the population
             - must be &gt;= 1
         ### Returns
@@ -81,7 +96,7 @@ class Population:
             population.append(self.get_random_genome())
         return population
 
-    def get_random_genome(self) -&gt; List[List[int]]:
+    def get_random_genome(self):
         &#39;&#39;&#39;[summary]
         Returns a random genome (individual).
         ### Returns
@@ -96,17 +111,17 @@ class Population:
         return genome
 
 
-    def get_random_gene(self, rowIndex: int, columnIndex: int, genome: List[List[int]]) -&gt; List[int]:
+    def get_random_gene(self, rowIndex, columnIndex, genome):
         &#39;&#39;&#39;[summary]
         Returns a random gene.
         ### Parameters
-        1. rowIndex: int
+        1. rowIndex
             - index of the row in the genome
             - must be &gt;= 0
-        2. columnIndex: int
+        2. columnIndex
             - index of the column in the genome
             - must be &gt;= 0
-        3. genome: List[List[int]]
+        3. genome
             - genome the gene is to be part of
         ### Returns
         List[int]
@@ -139,7 +154,7 @@ class Population:
         
         return gene
 
-    def get_population(self) -&gt; List[List[List[int]]]:
+    def get_population(self):
         &#39;&#39;&#39;[summary]
         ### Returns
         List[List[List[int]]]
@@ -147,11 +162,11 @@ class Population:
         &#39;&#39;&#39;
         return self.population
 
-    def get_individual(self, index: int) -&gt; List[int]:
+    def get_individual(self, index):
         &#39;&#39;&#39;[summary]
         Returns an individual from the population.
         ### Parameters
-        1. index: int
+        1. index
             - index of the individual
             - must be &gt;= 0
         ### Returns
@@ -163,14 +178,14 @@ class Population:
 
         return self.population[index]
     
-    def set_individual(self, index: int, individual: List[List[int]]) -&gt; None:
+    def set_individual(self, index, individual):
         &#39;&#39;&#39;[summary]
         Sets an individual in the population.
         ### Parameters
-        1. index: int
+        1. index
             - index of the individual
             - must be &gt;= 0
-        2. individual: List[List[int]]
+        2. individual
             - individual to set
         ### Returns
         None
@@ -179,28 +194,41 @@ class Population:
             raise ValueError(&#34;index must be &gt;= 0&#34;)
 
         self.population[index] = individual
+        self.reset_active_path(index)
+        self.calculate_fitness(index)
 
-    def get_parent(self) -&gt; List[List[int]]:
+    def get_parent(self, parent_index = 0):
         &#39;&#39;&#39;[summary]
         Returns the parent of the population.
         ### Returns
         List[List[int]]
             - parent genome
         &#39;&#39;&#39;
-        return self.population[self.parent_index]
+        if parent_index &gt;= self.nparents:
+            raise ValueError(&#34;Parent index out of range&#34;)
+
+        return self.population[parent_index]
     
-    def set_parent(self, new_parent: List[List[int]]) -&gt; None:
+    def get_parent_with_active_path(self, parent_index = 0):
+        return (self.get_parent(), self.get_active_path(parent_index))
+    
+    def set_parent(self, new_parent, parent_index = 0):
         &#39;&#39;&#39;[summary]
         Sets the parent of the population.
         ### Parameters
-        1. new_parent: List[List[int]]
+        1. new_parent
             - new parent genome
         ### Returns
         None
         &#39;&#39;&#39;
-        self.population[self.parent_index] = new_parent
+        if parent_index &gt;= self.nparents:
+            raise ValueError(&#34;Parent index out of range&#34;)
     
-    def get_children(self) -&gt; List[List[List[int]]]:
+        self.population[parent_index] = new_parent
+        self.reset_active_path(parent_index)
+        self.calculate_fitness(parent_index)
+    
+    def get_children(self):
         &#39;&#39;&#39;[summary]
         Returns the children of the population.
         ### Returns
@@ -211,12 +239,19 @@ class Population:
         for child_index in self.children_indexes:
             children.append(self.population[child_index])
         return children
+    
+    def get_children_with_active_paths(self):
+        children = []
+        for child_index in self.children_indexes:
+            children.append((self.population[child_index], self.active_paths[child_index]))
 
-    def set_children(self, new_children: List[List[List[int]]]) -&gt; None:
+        return children
+
+    def set_children(self, new_children):
         &#39;&#39;&#39;[summary]
         Sets the children of the population.
         ### Parameters
-        1. new_children: List[List[List[int]]]
+        1. new_children
             - new children genomes
         ### Returns
         None
@@ -229,9 +264,12 @@ class Population:
             raise ValueError(f&#34;Number of new_children is different than required, number of new_children:{len(new_children)}, required: {len(self.children_indexes)}&#34;)
 
         for i in range(len(new_children)):
-            self.population[self.children_indexes[i]] = new_children[i]
+            child_index = self.children_indexes[i]
+            self.population[child_index] = new_children[i]
+            self.reset_active_path(child_index)
+            self.calculate_fitness(child_index)
         
-    def get_ninputs(self) -&gt; int:
+    def get_ninputs(self):
         &#39;&#39;&#39;[summary]
         Returns the number of inputs in the genome.
         ### Returns
@@ -240,14 +278,293 @@ class Population:
         &#39;&#39;&#39;
         return self.nrows
     
-    def get_noutputs(self) -&gt; int:
+    def get_noutputs(self):
         &#39;&#39;&#39;[summary]
         Returns the number of outputs in the genome.
         ### Returns
         int
             - number of outputs
         &#39;&#39;&#39;
-        return self.nrows</code></pre>
+        return self.nrows
+    
+    def get_mutation_rate(self):
+        &#39;&#39;&#39;[summary]
+        Returns the mutation rate of the population.
+        ### Returns
+        float
+            - mutation rate
+        &#39;&#39;&#39;
+        return self.mutation_rate
+    
+    def calculate_active_path(self, individual_index):
+        &#39;&#39;&#39;[summary]
+        Returns active paths if given individual indexes
+        ### Parameters
+        1. individual_index
+            - index of individual to evaluate
+        ### Returns
+        List[int]
+            - indexes of active genes
+        &#39;&#39;&#39;
+        individual = self.population[individual_index]
+        output_gene_indexes = get_output_gene_indexes(individual)
+        active_gene_indexes = get_active_gene_indexes(individual, output_gene_indexes)
+        
+        return active_gene_indexes
+    
+    def get_active_path(self, individual_index):
+        &#39;&#39;&#39;[summary]
+        Returns indexes of active genes int the given individual index
+        ### Parameters
+        1. individual_index
+            - index of the individual
+        ### Returns
+        List[int]
+            - indexes of active genes
+        &#39;&#39;&#39;
+        return self.active_paths[individual_index]
+    
+    def set_active_path(self, individual_index, active_path):
+        &#39;&#39;&#39;[summary]
+        Sets the active path of the individual.
+        ### Parameters
+        1. individual_index
+            - index of the individual
+        2. active_path
+            - indexes of active genes
+        ### Returns
+        None
+        &#39;&#39;&#39;
+        self.active_paths[individual_index] = active_path
+
+    def reset_active_path(self, individual_index):
+        &#39;&#39;&#39;[summary]
+        Resets the active path of the individual.
+        ### Parameters
+        1. individual_index
+            - index of the individual
+        ### Returns
+        None
+        &#39;&#39;&#39;
+        self.set_active_path(individual_index, self.calculate_active_path(individual_index))
+
+    def reset_all_active_paths(self):
+        &#39;&#39;&#39;[summary]
+        Resets all active paths in the population.
+        ### Returns
+        None
+        &#39;&#39;&#39;
+        for individual_index in range(len(self.population)):
+            self.reset_active_path(individual_index)
+
+    def get_individual_with_active_path(self, individual_index):
+        &#39;&#39;&#39;[summary]
+        Returns the individual and its active path.
+        ### Parameters
+        1. individual_index
+            - index of the individual
+        ### Returns
+        1. List[List[int]]
+            - individual
+        2. List[int]
+            - active path
+        &#39;&#39;&#39;
+        return (self.get_individual(individual_index), self.get_active_path(individual_index))
+    
+    def get_fitness(self, individual_index):
+        &#39;&#39;&#39;[summary]
+        Returns the fitness of the individual.
+        ### Parameters
+        1. individual_index
+            - index of the individual
+        ### Returns
+        float
+            - fitness of the individual
+        &#39;&#39;&#39;
+        return self.fitnesses[individual_index]
+    
+    def set_fitness(self, individual_index, fitness):
+        &#39;&#39;&#39;[summary]
+        Sets the fitness of the individual.
+        ### Parameters
+        1. individual_index
+            - index of the individual
+        2. fitness
+            - fitness of the individual
+        ### Returns
+        None
+        &#39;&#39;&#39;
+        self.fitnesses[individual_index] = fitness
+
+    def calculate_fitness(self, individual_index):
+        &#39;&#39;&#39;[summary]
+        Calculates the fitness of the individual.
+        ### Parameters
+        1. individual_index
+            - index of the individual
+        ### Returns
+        None
+        &#39;&#39;&#39;
+        individual, active_path = self.get_individual_with_active_path(individual_index)
+        fitness, is_acceptable = evaluate_fitness(individual, active_path, self.input_matrix, self.wanted_output, self.max_error)
+        if is_acceptable:
+            self.solution_index = individual_index
+        self.set_fitness(individual_index, fitness)
+
+    def calculate_fitness_all(self):
+        &#39;&#39;&#39;[summary]
+        Calculates the fitness of all individuals in the population.
+        ### Parameters
+        1. input_matrix
+            - input_matrix data for the function
+        2. wanted_output
+            - expected output of the function
+        ### Returns
+        None
+        &#39;&#39;&#39;
+        for i in range(len(self.population)):
+            self.calculate_fitness(i)
+
+    def get_fittest_individual(self):
+        &#39;&#39;&#39;[summary]
+        Returns the fittest individual from the population.
+        ### Returns
+        1. List[List[int]]
+            - fittest individual
+        2. float
+            - fitness of the fittest individual
+        &#39;&#39;&#39;
+        fittest_index = self.fitnesses.index(min(self.fitnesses))
+        return (self.get_individual(fittest_index), self.get_fitness(fittest_index))
+
+    def get_children_fitness_array(self):
+        &#39;&#39;&#39;[summary]
+        Returns the fitnesses of the children.
+        ### Returns
+        List[float]
+            - fitnesses of the children
+        &#39;&#39;&#39;
+        children_fitnesses = []
+        for child_index in self.children_indexes:
+            children_fitnesses.append(self.get_fitness(child_index))
+        return children_fitnesses
+
+    def get_fittest_child(self):
+        &#39;&#39;&#39;[summary]
+        Returns the fittest child from the population.
+        ### Returns
+        1. List[List[int]]
+            - fittest child
+        2. float
+            - fitness of the fittest child
+        &#39;&#39;&#39;
+        best_child_index = self.children_indexes[0]
+        best_child_fitness = self.get_fitness(best_child_index)
+        for child_index in self.children_indexes:
+            if self.fitnesses[child_index] &lt; best_child_fitness:
+                best_child_index = child_index
+                best_child_fitness = self.fitnesses[child_index]
+
+        return (self.get_individual(best_child_index), best_child_fitness)
+    
+    def get_fittest_child_index(self):
+        &#39;&#39;&#39;[summary]
+        Returns the fittest child index from the population.
+        ### Returns
+        1. int
+            - fittest child index
+        2. float
+            - fitness of the fittest child
+        &#39;&#39;&#39;
+        best_child_index = self.children_indexes[0]
+        best_child_fitness = self.get_fitness(best_child_index)
+        for child_index in self.children_indexes:
+            if self.fitnesses[child_index] &lt; best_child_fitness:
+                best_child_index = child_index
+                best_child_fitness = self.fitnesses[child_index]
+        return best_child_index, best_child_fitness
+
+    def get_parent_fitness(self, parent_index=0):
+        &#39;&#39;&#39;[summary]
+        Returns the fitness of the parent.
+        ### Returns
+        float
+            - fitness of the parent
+        &#39;&#39;&#39;
+        return self.get_fitness(parent_index)
+    
+    def set_parent_by_index(self, new_parent_index, parent_index = 0):
+        &#39;&#39;&#39;[summary]
+        Sets the parent by index.
+        ### Parameters
+        1. parent_index
+            - index of the parent
+        ### Returns
+        None
+        &#39;&#39;&#39;
+        if parent_index &gt;= self.nparents:
+            raise ValueError(&#34;Parent index out of range&#34;)
+        
+        if new_parent_index == parent_index:
+            return
+        else:
+            self.move_individual(new_parent_index, parent_index)
+
+    def set_parents_by_indexes(self, new_parent_1_index, new_parent_2_index):
+        &#39;&#39;&#39;[summary]
+        Sets the parents by indexes.
+        ### Parameters
+        1. new_parent_indexes
+            - indexes of the new parents
+        ### Returns
+        None
+        &#39;&#39;&#39;
+        if self.is_parent(new_parent_1_index) and self.is_parent(new_parent_2_index):
+            return
+        elif self.is_parent(new_parent_1_index):
+            if new_parent_1_index == 0:
+                self.move_individual(new_parent_2_index, 1)
+            elif new_parent_1_index == 1:
+                self.move_individual(new_parent_2_index, 0)
+            else:
+                raise ValueError(&#34;Parent index out of range&#34;)
+        elif self.is_parent(new_parent_2_index):
+            if new_parent_2_index == 0:
+                self.move_individual(new_parent_1_index, 1)
+            elif new_parent_2_index == 1:
+                self.move_individual(new_parent_1_index, 0)
+            else:
+                raise ValueError(&#34;Parent index out of range&#34;)
+        else:
+            self.move_individual(new_parent_1_index, 0)
+            self.move_individual(new_parent_2_index, 1)
+
+    def is_parent(self, index):
+        &#39;&#39;&#39;[summary]
+        Returns True if the given index is a parent, False otherwise.
+        ### Parameters
+        1. index
+            - index to check
+        ### Returns
+        bool
+            - True if the given index is a parent, False otherwise
+        &#39;&#39;&#39;
+        return index &lt; self.nparents
+    
+    def move_individual(self, from_index, to_index):
+        &#39;&#39;&#39;[summary]
+        Moves an individual from one index to another.
+        ### Parameters
+        1. from_index
+            - index to move from
+        2. to_index
+            - index to move to
+        ### Returns
+        None
+        &#39;&#39;&#39;
+        self.population[to_index] = self.population[from_index]
+        self.active_paths[to_index] = self.active_paths[from_index]
+        self.fitnesses[to_index] = self.fitnesses[from_index]</code></pre>
 </details>
 </section>
 <section>
@@ -261,26 +578,31 @@ class Population:
 <dl>
 <dt id="population.Population"><code class="flex name class">
 <span>class <span class="ident">Population</span></span>
-<span>(</span><span>population_size: int, ncolumns: int, nrows: int)</span>
+<span>(</span><span>population_size, ncolumns, nrows, mutation_rate, input_matrix, wanted_output, nparents=1, max_error=0.01)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>[summary]
 Initializes the population with random genomes.</p>
 <h3 id="parameters">Parameters</h3>
 <ol>
-<li>population_size: int<ul>
+<li>population_size<ul>
 <li>number of individuals in the population</li>
 <li>must be &gt;= 1</li>
 </ul>
 </li>
-<li>ncolumns: int<ul>
+<li>ncolumns<ul>
 <li>number of columns in the genome</li>
 <li>must be &gt;= 3</li>
 </ul>
 </li>
-<li>nrows: int<ul>
+<li>nrows<ul>
 <li>number of rows in the genome</li>
 <li>must be &gt;= 1</li>
+</ul>
+</li>
+<li>mutation_rate<ul>
+<li>mutation rate of the algorithm</li>
+<li>must be &gt;= 0 and &lt;= 1</li>
 </ul>
 </li>
 </ol>
@@ -295,19 +617,22 @@ Initializes the population with random genomes.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Population:
-    def __init__(self, population_size: int, ncolumns: int, nrows: int) -&gt; None:
+    def __init__(self, population_size, ncolumns, nrows, mutation_rate, input_matrix, wanted_output, nparents = 1, max_error = 0.01):
         &#39;&#39;&#39;[summary]
         Initializes the population with random genomes.
         ### Parameters
-        1. population_size: int
+        1. population_size
             - number of individuals in the population
             - must be &gt;= 1
-        2. ncolumns: int
+        2. ncolumns
             - number of columns in the genome
             - must be &gt;= 3
-        3. nrows: int
+        3. nrows
             - number of rows in the genome
             - must be &gt;= 1
+        4. mutation_rate
+            - mutation rate of the algorithm
+            - must be &gt;= 0 and &lt;= 1
         ### Raises
         ------
         ValueError
@@ -321,18 +646,30 @@ Initializes the population with random genomes.</p>
             raise ValueError(&#34;nrows must be &gt;= 1&#34;)
         if ncolumns &lt; 3:
             raise ValueError(&#34;ncolumns must be &gt;= 3&#34;)
+        if mutation_rate &lt; 0 or mutation_rate &gt; 1:
+            raise ValueError(&#34;mutation_rate must be &gt;= 0 and &lt;= 1&#34;)
 
         self.nrows = nrows
         self.ncolumns = ncolumns
         self.population = self.get_starting_popultation(population_size)
-        self.parent_index = 0
-        self.children_indexes = [i for i in range(1, population_size)]
+        self.nparents = nparents
+        self.children_indexes = [i for i in range(nparents, population_size)] # 1 becouse its only for children (minus parent with index 0)
+        self.mutation_rate = mutation_rate
+        self.active_paths = [[] for i in range(population_size)]
+        self.fitnesses = [np.inf for i in range(population_size)]
+        self.input_matrix = input_matrix
+        self.wanted_output = wanted_output
+        self.population_size = population_size
+        self.max_error = max_error
+        self.solution_index = None
+        self.reset_all_active_paths()
+        self.calculate_fitness_all()
 
-    def get_starting_popultation(self, population_size: int) -&gt; List[List[List[int]]]:
+    def get_starting_popultation(self, population_size):
         &#39;&#39;&#39;[summary]
         Returns a list of random genomes (population).
         ### Parameters
-        1. population_size: int
+        1. population_size
             - number of individuals in the population
             - must be &gt;= 1
         ### Returns
@@ -344,7 +681,7 @@ Initializes the population with random genomes.</p>
             population.append(self.get_random_genome())
         return population
 
-    def get_random_genome(self) -&gt; List[List[int]]:
+    def get_random_genome(self):
         &#39;&#39;&#39;[summary]
         Returns a random genome (individual).
         ### Returns
@@ -359,17 +696,17 @@ Initializes the population with random genomes.</p>
         return genome
 
 
-    def get_random_gene(self, rowIndex: int, columnIndex: int, genome: List[List[int]]) -&gt; List[int]:
+    def get_random_gene(self, rowIndex, columnIndex, genome):
         &#39;&#39;&#39;[summary]
         Returns a random gene.
         ### Parameters
-        1. rowIndex: int
+        1. rowIndex
             - index of the row in the genome
             - must be &gt;= 0
-        2. columnIndex: int
+        2. columnIndex
             - index of the column in the genome
             - must be &gt;= 0
-        3. genome: List[List[int]]
+        3. genome
             - genome the gene is to be part of
         ### Returns
         List[int]
@@ -402,7 +739,7 @@ Initializes the population with random genomes.</p>
         
         return gene
 
-    def get_population(self) -&gt; List[List[List[int]]]:
+    def get_population(self):
         &#39;&#39;&#39;[summary]
         ### Returns
         List[List[List[int]]]
@@ -410,11 +747,11 @@ Initializes the population with random genomes.</p>
         &#39;&#39;&#39;
         return self.population
 
-    def get_individual(self, index: int) -&gt; List[int]:
+    def get_individual(self, index):
         &#39;&#39;&#39;[summary]
         Returns an individual from the population.
         ### Parameters
-        1. index: int
+        1. index
             - index of the individual
             - must be &gt;= 0
         ### Returns
@@ -426,14 +763,14 @@ Initializes the population with random genomes.</p>
 
         return self.population[index]
     
-    def set_individual(self, index: int, individual: List[List[int]]) -&gt; None:
+    def set_individual(self, index, individual):
         &#39;&#39;&#39;[summary]
         Sets an individual in the population.
         ### Parameters
-        1. index: int
+        1. index
             - index of the individual
             - must be &gt;= 0
-        2. individual: List[List[int]]
+        2. individual
             - individual to set
         ### Returns
         None
@@ -442,28 +779,41 @@ Initializes the population with random genomes.</p>
             raise ValueError(&#34;index must be &gt;= 0&#34;)
 
         self.population[index] = individual
+        self.reset_active_path(index)
+        self.calculate_fitness(index)
 
-    def get_parent(self) -&gt; List[List[int]]:
+    def get_parent(self, parent_index = 0):
         &#39;&#39;&#39;[summary]
         Returns the parent of the population.
         ### Returns
         List[List[int]]
             - parent genome
         &#39;&#39;&#39;
-        return self.population[self.parent_index]
+        if parent_index &gt;= self.nparents:
+            raise ValueError(&#34;Parent index out of range&#34;)
+
+        return self.population[parent_index]
     
-    def set_parent(self, new_parent: List[List[int]]) -&gt; None:
+    def get_parent_with_active_path(self, parent_index = 0):
+        return (self.get_parent(), self.get_active_path(parent_index))
+    
+    def set_parent(self, new_parent, parent_index = 0):
         &#39;&#39;&#39;[summary]
         Sets the parent of the population.
         ### Parameters
-        1. new_parent: List[List[int]]
+        1. new_parent
             - new parent genome
         ### Returns
         None
         &#39;&#39;&#39;
-        self.population[self.parent_index] = new_parent
+        if parent_index &gt;= self.nparents:
+            raise ValueError(&#34;Parent index out of range&#34;)
     
-    def get_children(self) -&gt; List[List[List[int]]]:
+        self.population[parent_index] = new_parent
+        self.reset_active_path(parent_index)
+        self.calculate_fitness(parent_index)
+    
+    def get_children(self):
         &#39;&#39;&#39;[summary]
         Returns the children of the population.
         ### Returns
@@ -474,12 +824,19 @@ Initializes the population with random genomes.</p>
         for child_index in self.children_indexes:
             children.append(self.population[child_index])
         return children
+    
+    def get_children_with_active_paths(self):
+        children = []
+        for child_index in self.children_indexes:
+            children.append((self.population[child_index], self.active_paths[child_index]))
 
-    def set_children(self, new_children: List[List[List[int]]]) -&gt; None:
+        return children
+
+    def set_children(self, new_children):
         &#39;&#39;&#39;[summary]
         Sets the children of the population.
         ### Parameters
-        1. new_children: List[List[List[int]]]
+        1. new_children
             - new children genomes
         ### Returns
         None
@@ -492,9 +849,12 @@ Initializes the population with random genomes.</p>
             raise ValueError(f&#34;Number of new_children is different than required, number of new_children:{len(new_children)}, required: {len(self.children_indexes)}&#34;)
 
         for i in range(len(new_children)):
-            self.population[self.children_indexes[i]] = new_children[i]
+            child_index = self.children_indexes[i]
+            self.population[child_index] = new_children[i]
+            self.reset_active_path(child_index)
+            self.calculate_fitness(child_index)
         
-    def get_ninputs(self) -&gt; int:
+    def get_ninputs(self):
         &#39;&#39;&#39;[summary]
         Returns the number of inputs in the genome.
         ### Returns
@@ -503,19 +863,441 @@ Initializes the population with random genomes.</p>
         &#39;&#39;&#39;
         return self.nrows
     
-    def get_noutputs(self) -&gt; int:
+    def get_noutputs(self):
         &#39;&#39;&#39;[summary]
         Returns the number of outputs in the genome.
         ### Returns
         int
             - number of outputs
         &#39;&#39;&#39;
-        return self.nrows</code></pre>
+        return self.nrows
+    
+    def get_mutation_rate(self):
+        &#39;&#39;&#39;[summary]
+        Returns the mutation rate of the population.
+        ### Returns
+        float
+            - mutation rate
+        &#39;&#39;&#39;
+        return self.mutation_rate
+    
+    def calculate_active_path(self, individual_index):
+        &#39;&#39;&#39;[summary]
+        Returns active paths if given individual indexes
+        ### Parameters
+        1. individual_index
+            - index of individual to evaluate
+        ### Returns
+        List[int]
+            - indexes of active genes
+        &#39;&#39;&#39;
+        individual = self.population[individual_index]
+        output_gene_indexes = get_output_gene_indexes(individual)
+        active_gene_indexes = get_active_gene_indexes(individual, output_gene_indexes)
+        
+        return active_gene_indexes
+    
+    def get_active_path(self, individual_index):
+        &#39;&#39;&#39;[summary]
+        Returns indexes of active genes int the given individual index
+        ### Parameters
+        1. individual_index
+            - index of the individual
+        ### Returns
+        List[int]
+            - indexes of active genes
+        &#39;&#39;&#39;
+        return self.active_paths[individual_index]
+    
+    def set_active_path(self, individual_index, active_path):
+        &#39;&#39;&#39;[summary]
+        Sets the active path of the individual.
+        ### Parameters
+        1. individual_index
+            - index of the individual
+        2. active_path
+            - indexes of active genes
+        ### Returns
+        None
+        &#39;&#39;&#39;
+        self.active_paths[individual_index] = active_path
+
+    def reset_active_path(self, individual_index):
+        &#39;&#39;&#39;[summary]
+        Resets the active path of the individual.
+        ### Parameters
+        1. individual_index
+            - index of the individual
+        ### Returns
+        None
+        &#39;&#39;&#39;
+        self.set_active_path(individual_index, self.calculate_active_path(individual_index))
+
+    def reset_all_active_paths(self):
+        &#39;&#39;&#39;[summary]
+        Resets all active paths in the population.
+        ### Returns
+        None
+        &#39;&#39;&#39;
+        for individual_index in range(len(self.population)):
+            self.reset_active_path(individual_index)
+
+    def get_individual_with_active_path(self, individual_index):
+        &#39;&#39;&#39;[summary]
+        Returns the individual and its active path.
+        ### Parameters
+        1. individual_index
+            - index of the individual
+        ### Returns
+        1. List[List[int]]
+            - individual
+        2. List[int]
+            - active path
+        &#39;&#39;&#39;
+        return (self.get_individual(individual_index), self.get_active_path(individual_index))
+    
+    def get_fitness(self, individual_index):
+        &#39;&#39;&#39;[summary]
+        Returns the fitness of the individual.
+        ### Parameters
+        1. individual_index
+            - index of the individual
+        ### Returns
+        float
+            - fitness of the individual
+        &#39;&#39;&#39;
+        return self.fitnesses[individual_index]
+    
+    def set_fitness(self, individual_index, fitness):
+        &#39;&#39;&#39;[summary]
+        Sets the fitness of the individual.
+        ### Parameters
+        1. individual_index
+            - index of the individual
+        2. fitness
+            - fitness of the individual
+        ### Returns
+        None
+        &#39;&#39;&#39;
+        self.fitnesses[individual_index] = fitness
+
+    def calculate_fitness(self, individual_index):
+        &#39;&#39;&#39;[summary]
+        Calculates the fitness of the individual.
+        ### Parameters
+        1. individual_index
+            - index of the individual
+        ### Returns
+        None
+        &#39;&#39;&#39;
+        individual, active_path = self.get_individual_with_active_path(individual_index)
+        fitness, is_acceptable = evaluate_fitness(individual, active_path, self.input_matrix, self.wanted_output, self.max_error)
+        if is_acceptable:
+            self.solution_index = individual_index
+        self.set_fitness(individual_index, fitness)
+
+    def calculate_fitness_all(self):
+        &#39;&#39;&#39;[summary]
+        Calculates the fitness of all individuals in the population.
+        ### Parameters
+        1. input_matrix
+            - input_matrix data for the function
+        2. wanted_output
+            - expected output of the function
+        ### Returns
+        None
+        &#39;&#39;&#39;
+        for i in range(len(self.population)):
+            self.calculate_fitness(i)
+
+    def get_fittest_individual(self):
+        &#39;&#39;&#39;[summary]
+        Returns the fittest individual from the population.
+        ### Returns
+        1. List[List[int]]
+            - fittest individual
+        2. float
+            - fitness of the fittest individual
+        &#39;&#39;&#39;
+        fittest_index = self.fitnesses.index(min(self.fitnesses))
+        return (self.get_individual(fittest_index), self.get_fitness(fittest_index))
+
+    def get_children_fitness_array(self):
+        &#39;&#39;&#39;[summary]
+        Returns the fitnesses of the children.
+        ### Returns
+        List[float]
+            - fitnesses of the children
+        &#39;&#39;&#39;
+        children_fitnesses = []
+        for child_index in self.children_indexes:
+            children_fitnesses.append(self.get_fitness(child_index))
+        return children_fitnesses
+
+    def get_fittest_child(self):
+        &#39;&#39;&#39;[summary]
+        Returns the fittest child from the population.
+        ### Returns
+        1. List[List[int]]
+            - fittest child
+        2. float
+            - fitness of the fittest child
+        &#39;&#39;&#39;
+        best_child_index = self.children_indexes[0]
+        best_child_fitness = self.get_fitness(best_child_index)
+        for child_index in self.children_indexes:
+            if self.fitnesses[child_index] &lt; best_child_fitness:
+                best_child_index = child_index
+                best_child_fitness = self.fitnesses[child_index]
+
+        return (self.get_individual(best_child_index), best_child_fitness)
+    
+    def get_fittest_child_index(self):
+        &#39;&#39;&#39;[summary]
+        Returns the fittest child index from the population.
+        ### Returns
+        1. int
+            - fittest child index
+        2. float
+            - fitness of the fittest child
+        &#39;&#39;&#39;
+        best_child_index = self.children_indexes[0]
+        best_child_fitness = self.get_fitness(best_child_index)
+        for child_index in self.children_indexes:
+            if self.fitnesses[child_index] &lt; best_child_fitness:
+                best_child_index = child_index
+                best_child_fitness = self.fitnesses[child_index]
+        return best_child_index, best_child_fitness
+
+    def get_parent_fitness(self, parent_index=0):
+        &#39;&#39;&#39;[summary]
+        Returns the fitness of the parent.
+        ### Returns
+        float
+            - fitness of the parent
+        &#39;&#39;&#39;
+        return self.get_fitness(parent_index)
+    
+    def set_parent_by_index(self, new_parent_index, parent_index = 0):
+        &#39;&#39;&#39;[summary]
+        Sets the parent by index.
+        ### Parameters
+        1. parent_index
+            - index of the parent
+        ### Returns
+        None
+        &#39;&#39;&#39;
+        if parent_index &gt;= self.nparents:
+            raise ValueError(&#34;Parent index out of range&#34;)
+        
+        if new_parent_index == parent_index:
+            return
+        else:
+            self.move_individual(new_parent_index, parent_index)
+
+    def set_parents_by_indexes(self, new_parent_1_index, new_parent_2_index):
+        &#39;&#39;&#39;[summary]
+        Sets the parents by indexes.
+        ### Parameters
+        1. new_parent_indexes
+            - indexes of the new parents
+        ### Returns
+        None
+        &#39;&#39;&#39;
+        if self.is_parent(new_parent_1_index) and self.is_parent(new_parent_2_index):
+            return
+        elif self.is_parent(new_parent_1_index):
+            if new_parent_1_index == 0:
+                self.move_individual(new_parent_2_index, 1)
+            elif new_parent_1_index == 1:
+                self.move_individual(new_parent_2_index, 0)
+            else:
+                raise ValueError(&#34;Parent index out of range&#34;)
+        elif self.is_parent(new_parent_2_index):
+            if new_parent_2_index == 0:
+                self.move_individual(new_parent_1_index, 1)
+            elif new_parent_2_index == 1:
+                self.move_individual(new_parent_1_index, 0)
+            else:
+                raise ValueError(&#34;Parent index out of range&#34;)
+        else:
+            self.move_individual(new_parent_1_index, 0)
+            self.move_individual(new_parent_2_index, 1)
+
+    def is_parent(self, index):
+        &#39;&#39;&#39;[summary]
+        Returns True if the given index is a parent, False otherwise.
+        ### Parameters
+        1. index
+            - index to check
+        ### Returns
+        bool
+            - True if the given index is a parent, False otherwise
+        &#39;&#39;&#39;
+        return index &lt; self.nparents
+    
+    def move_individual(self, from_index, to_index):
+        &#39;&#39;&#39;[summary]
+        Moves an individual from one index to another.
+        ### Parameters
+        1. from_index
+            - index to move from
+        2. to_index
+            - index to move to
+        ### Returns
+        None
+        &#39;&#39;&#39;
+        self.population[to_index] = self.population[from_index]
+        self.active_paths[to_index] = self.active_paths[from_index]
+        self.fitnesses[to_index] = self.fitnesses[from_index]</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
+<dt id="population.Population.calculate_active_path"><code class="name flex">
+<span>def <span class="ident">calculate_active_path</span></span>(<span>self, individual_index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Returns active paths if given individual indexes</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>individual_index<ul>
+<li>index of individual to evaluate</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>List[int]
+- indexes of active genes</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calculate_active_path(self, individual_index):
+    &#39;&#39;&#39;[summary]
+    Returns active paths if given individual indexes
+    ### Parameters
+    1. individual_index
+        - index of individual to evaluate
+    ### Returns
+    List[int]
+        - indexes of active genes
+    &#39;&#39;&#39;
+    individual = self.population[individual_index]
+    output_gene_indexes = get_output_gene_indexes(individual)
+    active_gene_indexes = get_active_gene_indexes(individual, output_gene_indexes)
+    
+    return active_gene_indexes</code></pre>
+</details>
+</dd>
+<dt id="population.Population.calculate_fitness"><code class="name flex">
+<span>def <span class="ident">calculate_fitness</span></span>(<span>self, individual_index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Calculates the fitness of the individual.</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>individual_index<ul>
+<li>index of the individual</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calculate_fitness(self, individual_index):
+    &#39;&#39;&#39;[summary]
+    Calculates the fitness of the individual.
+    ### Parameters
+    1. individual_index
+        - index of the individual
+    ### Returns
+    None
+    &#39;&#39;&#39;
+    individual, active_path = self.get_individual_with_active_path(individual_index)
+    fitness, is_acceptable = evaluate_fitness(individual, active_path, self.input_matrix, self.wanted_output, self.max_error)
+    if is_acceptable:
+        self.solution_index = individual_index
+    self.set_fitness(individual_index, fitness)</code></pre>
+</details>
+</dd>
+<dt id="population.Population.calculate_fitness_all"><code class="name flex">
+<span>def <span class="ident">calculate_fitness_all</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Calculates the fitness of all individuals in the population.</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>input_matrix<ul>
+<li>input_matrix data for the function</li>
+</ul>
+</li>
+<li>wanted_output<ul>
+<li>expected output of the function</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calculate_fitness_all(self):
+    &#39;&#39;&#39;[summary]
+    Calculates the fitness of all individuals in the population.
+    ### Parameters
+    1. input_matrix
+        - input_matrix data for the function
+    2. wanted_output
+        - expected output of the function
+    ### Returns
+    None
+    &#39;&#39;&#39;
+    for i in range(len(self.population)):
+        self.calculate_fitness(i)</code></pre>
+</details>
+</dd>
+<dt id="population.Population.get_active_path"><code class="name flex">
+<span>def <span class="ident">get_active_path</span></span>(<span>self, individual_index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Returns indexes of active genes int the given individual index</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>individual_index<ul>
+<li>index of the individual</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>List[int]
+- indexes of active genes</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_active_path(self, individual_index):
+    &#39;&#39;&#39;[summary]
+    Returns indexes of active genes int the given individual index
+    ### Parameters
+    1. individual_index
+        - index of the individual
+    ### Returns
+    List[int]
+        - indexes of active genes
+    &#39;&#39;&#39;
+    return self.active_paths[individual_index]</code></pre>
+</details>
+</dd>
 <dt id="population.Population.get_children"><code class="name flex">
-<span>def <span class="ident">get_children</span></span>(<span>self) ‑> List[List[List[int]]]</span>
+<span>def <span class="ident">get_children</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>[summary]
@@ -527,7 +1309,7 @@ Returns the children of the population.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_children(self) -&gt; List[List[List[int]]]:
+<pre><code class="python">def get_children(self):
     &#39;&#39;&#39;[summary]
     Returns the children of the population.
     ### Returns
@@ -540,15 +1322,204 @@ Returns the children of the population.</p>
     return children</code></pre>
 </details>
 </dd>
+<dt id="population.Population.get_children_fitness_array"><code class="name flex">
+<span>def <span class="ident">get_children_fitness_array</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Returns the fitnesses of the children.</p>
+<h3 id="returns">Returns</h3>
+<p>List[float]
+- fitnesses of the children</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_children_fitness_array(self):
+    &#39;&#39;&#39;[summary]
+    Returns the fitnesses of the children.
+    ### Returns
+    List[float]
+        - fitnesses of the children
+    &#39;&#39;&#39;
+    children_fitnesses = []
+    for child_index in self.children_indexes:
+        children_fitnesses.append(self.get_fitness(child_index))
+    return children_fitnesses</code></pre>
+</details>
+</dd>
+<dt id="population.Population.get_children_with_active_paths"><code class="name flex">
+<span>def <span class="ident">get_children_with_active_paths</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_children_with_active_paths(self):
+    children = []
+    for child_index in self.children_indexes:
+        children.append((self.population[child_index], self.active_paths[child_index]))
+
+    return children</code></pre>
+</details>
+</dd>
+<dt id="population.Population.get_fitness"><code class="name flex">
+<span>def <span class="ident">get_fitness</span></span>(<span>self, individual_index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Returns the fitness of the individual.</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>individual_index<ul>
+<li>index of the individual</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>float
+- fitness of the individual</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_fitness(self, individual_index):
+    &#39;&#39;&#39;[summary]
+    Returns the fitness of the individual.
+    ### Parameters
+    1. individual_index
+        - index of the individual
+    ### Returns
+    float
+        - fitness of the individual
+    &#39;&#39;&#39;
+    return self.fitnesses[individual_index]</code></pre>
+</details>
+</dd>
+<dt id="population.Population.get_fittest_child"><code class="name flex">
+<span>def <span class="ident">get_fittest_child</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Returns the fittest child from the population.</p>
+<h3 id="returns">Returns</h3>
+<ol>
+<li>List[List[int]]<ul>
+<li>fittest child</li>
+</ul>
+</li>
+<li>float<ul>
+<li>fitness of the fittest child</li>
+</ul>
+</li>
+</ol></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_fittest_child(self):
+    &#39;&#39;&#39;[summary]
+    Returns the fittest child from the population.
+    ### Returns
+    1. List[List[int]]
+        - fittest child
+    2. float
+        - fitness of the fittest child
+    &#39;&#39;&#39;
+    best_child_index = self.children_indexes[0]
+    best_child_fitness = self.get_fitness(best_child_index)
+    for child_index in self.children_indexes:
+        if self.fitnesses[child_index] &lt; best_child_fitness:
+            best_child_index = child_index
+            best_child_fitness = self.fitnesses[child_index]
+
+    return (self.get_individual(best_child_index), best_child_fitness)</code></pre>
+</details>
+</dd>
+<dt id="population.Population.get_fittest_child_index"><code class="name flex">
+<span>def <span class="ident">get_fittest_child_index</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Returns the fittest child index from the population.</p>
+<h3 id="returns">Returns</h3>
+<ol>
+<li>int<ul>
+<li>fittest child index</li>
+</ul>
+</li>
+<li>float<ul>
+<li>fitness of the fittest child</li>
+</ul>
+</li>
+</ol></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_fittest_child_index(self):
+    &#39;&#39;&#39;[summary]
+    Returns the fittest child index from the population.
+    ### Returns
+    1. int
+        - fittest child index
+    2. float
+        - fitness of the fittest child
+    &#39;&#39;&#39;
+    best_child_index = self.children_indexes[0]
+    best_child_fitness = self.get_fitness(best_child_index)
+    for child_index in self.children_indexes:
+        if self.fitnesses[child_index] &lt; best_child_fitness:
+            best_child_index = child_index
+            best_child_fitness = self.fitnesses[child_index]
+    return best_child_index, best_child_fitness</code></pre>
+</details>
+</dd>
+<dt id="population.Population.get_fittest_individual"><code class="name flex">
+<span>def <span class="ident">get_fittest_individual</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Returns the fittest individual from the population.</p>
+<h3 id="returns">Returns</h3>
+<ol>
+<li>List[List[int]]<ul>
+<li>fittest individual</li>
+</ul>
+</li>
+<li>float<ul>
+<li>fitness of the fittest individual</li>
+</ul>
+</li>
+</ol></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_fittest_individual(self):
+    &#39;&#39;&#39;[summary]
+    Returns the fittest individual from the population.
+    ### Returns
+    1. List[List[int]]
+        - fittest individual
+    2. float
+        - fitness of the fittest individual
+    &#39;&#39;&#39;
+    fittest_index = self.fitnesses.index(min(self.fitnesses))
+    return (self.get_individual(fittest_index), self.get_fitness(fittest_index))</code></pre>
+</details>
+</dd>
 <dt id="population.Population.get_individual"><code class="name flex">
-<span>def <span class="ident">get_individual</span></span>(<span>self, index: int) ‑> List[int]</span>
+<span>def <span class="ident">get_individual</span></span>(<span>self, index)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>[summary]
 Returns an individual from the population.</p>
 <h3 id="parameters">Parameters</h3>
 <ol>
-<li>index: int<ul>
+<li>index<ul>
 <li>index of the individual</li>
 <li>must be &gt;= 0</li>
 </ul>
@@ -561,11 +1532,11 @@ Returns an individual from the population.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_individual(self, index: int) -&gt; List[int]:
+<pre><code class="python">def get_individual(self, index):
     &#39;&#39;&#39;[summary]
     Returns an individual from the population.
     ### Parameters
-    1. index: int
+    1. index
         - index of the individual
         - must be &gt;= 0
     ### Returns
@@ -578,8 +1549,74 @@ Returns an individual from the population.</p>
     return self.population[index]</code></pre>
 </details>
 </dd>
+<dt id="population.Population.get_individual_with_active_path"><code class="name flex">
+<span>def <span class="ident">get_individual_with_active_path</span></span>(<span>self, individual_index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Returns the individual and its active path.</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>individual_index<ul>
+<li>index of the individual</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<ol>
+<li>List[List[int]]<ul>
+<li>individual</li>
+</ul>
+</li>
+<li>List[int]<ul>
+<li>active path</li>
+</ul>
+</li>
+</ol></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_individual_with_active_path(self, individual_index):
+    &#39;&#39;&#39;[summary]
+    Returns the individual and its active path.
+    ### Parameters
+    1. individual_index
+        - index of the individual
+    ### Returns
+    1. List[List[int]]
+        - individual
+    2. List[int]
+        - active path
+    &#39;&#39;&#39;
+    return (self.get_individual(individual_index), self.get_active_path(individual_index))</code></pre>
+</details>
+</dd>
+<dt id="population.Population.get_mutation_rate"><code class="name flex">
+<span>def <span class="ident">get_mutation_rate</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Returns the mutation rate of the population.</p>
+<h3 id="returns">Returns</h3>
+<p>float
+- mutation rate</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_mutation_rate(self):
+    &#39;&#39;&#39;[summary]
+    Returns the mutation rate of the population.
+    ### Returns
+    float
+        - mutation rate
+    &#39;&#39;&#39;
+    return self.mutation_rate</code></pre>
+</details>
+</dd>
 <dt id="population.Population.get_ninputs"><code class="name flex">
-<span>def <span class="ident">get_ninputs</span></span>(<span>self) ‑> int</span>
+<span>def <span class="ident">get_ninputs</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>[summary]
@@ -591,7 +1628,7 @@ Returns the number of inputs in the genome.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_ninputs(self) -&gt; int:
+<pre><code class="python">def get_ninputs(self):
     &#39;&#39;&#39;[summary]
     Returns the number of inputs in the genome.
     ### Returns
@@ -602,7 +1639,7 @@ Returns the number of inputs in the genome.</p>
 </details>
 </dd>
 <dt id="population.Population.get_noutputs"><code class="name flex">
-<span>def <span class="ident">get_noutputs</span></span>(<span>self) ‑> int</span>
+<span>def <span class="ident">get_noutputs</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>[summary]
@@ -614,7 +1651,7 @@ Returns the number of outputs in the genome.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_noutputs(self) -&gt; int:
+<pre><code class="python">def get_noutputs(self):
     &#39;&#39;&#39;[summary]
     Returns the number of outputs in the genome.
     ### Returns
@@ -625,7 +1662,7 @@ Returns the number of outputs in the genome.</p>
 </details>
 </dd>
 <dt id="population.Population.get_parent"><code class="name flex">
-<span>def <span class="ident">get_parent</span></span>(<span>self) ‑> List[List[int]]</span>
+<span>def <span class="ident">get_parent</span></span>(<span>self, parent_index=0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>[summary]
@@ -637,18 +1674,57 @@ Returns the parent of the population.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_parent(self) -&gt; List[List[int]]:
+<pre><code class="python">def get_parent(self, parent_index = 0):
     &#39;&#39;&#39;[summary]
     Returns the parent of the population.
     ### Returns
     List[List[int]]
         - parent genome
     &#39;&#39;&#39;
-    return self.population[self.parent_index]</code></pre>
+    if parent_index &gt;= self.nparents:
+        raise ValueError(&#34;Parent index out of range&#34;)
+
+    return self.population[parent_index]</code></pre>
+</details>
+</dd>
+<dt id="population.Population.get_parent_fitness"><code class="name flex">
+<span>def <span class="ident">get_parent_fitness</span></span>(<span>self, parent_index=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Returns the fitness of the parent.</p>
+<h3 id="returns">Returns</h3>
+<p>float
+- fitness of the parent</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_parent_fitness(self, parent_index=0):
+    &#39;&#39;&#39;[summary]
+    Returns the fitness of the parent.
+    ### Returns
+    float
+        - fitness of the parent
+    &#39;&#39;&#39;
+    return self.get_fitness(parent_index)</code></pre>
+</details>
+</dd>
+<dt id="population.Population.get_parent_with_active_path"><code class="name flex">
+<span>def <span class="ident">get_parent_with_active_path</span></span>(<span>self, parent_index=0)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_parent_with_active_path(self, parent_index = 0):
+    return (self.get_parent(), self.get_active_path(parent_index))</code></pre>
 </details>
 </dd>
 <dt id="population.Population.get_population"><code class="name flex">
-<span>def <span class="ident">get_population</span></span>(<span>self) ‑> List[List[List[int]]]</span>
+<span>def <span class="ident">get_population</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>[summary]</p>
@@ -659,7 +1735,7 @@ Returns the parent of the population.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_population(self) -&gt; List[List[List[int]]]:
+<pre><code class="python">def get_population(self):
     &#39;&#39;&#39;[summary]
     ### Returns
     List[List[List[int]]]
@@ -669,24 +1745,24 @@ Returns the parent of the population.</p>
 </details>
 </dd>
 <dt id="population.Population.get_random_gene"><code class="name flex">
-<span>def <span class="ident">get_random_gene</span></span>(<span>self, rowIndex: int, columnIndex: int, genome: List[List[int]]) ‑> List[int]</span>
+<span>def <span class="ident">get_random_gene</span></span>(<span>self, rowIndex, columnIndex, genome)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>[summary]
 Returns a random gene.</p>
 <h3 id="parameters">Parameters</h3>
 <ol>
-<li>rowIndex: int<ul>
+<li>rowIndex<ul>
 <li>index of the row in the genome</li>
 <li>must be &gt;= 0</li>
 </ul>
 </li>
-<li>columnIndex: int<ul>
+<li>columnIndex<ul>
 <li>index of the column in the genome</li>
 <li>must be &gt;= 0</li>
 </ul>
 </li>
-<li>genome: List[List[int]]<ul>
+<li>genome<ul>
 <li>genome the gene is to be part of</li>
 </ul>
 </li>
@@ -698,17 +1774,17 @@ Returns a random gene.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_random_gene(self, rowIndex: int, columnIndex: int, genome: List[List[int]]) -&gt; List[int]:
+<pre><code class="python">def get_random_gene(self, rowIndex, columnIndex, genome):
     &#39;&#39;&#39;[summary]
     Returns a random gene.
     ### Parameters
-    1. rowIndex: int
+    1. rowIndex
         - index of the row in the genome
         - must be &gt;= 0
-    2. columnIndex: int
+    2. columnIndex
         - index of the column in the genome
         - must be &gt;= 0
-    3. genome: List[List[int]]
+    3. genome
         - genome the gene is to be part of
     ### Returns
     List[int]
@@ -743,7 +1819,7 @@ Returns a random gene.</p>
 </details>
 </dd>
 <dt id="population.Population.get_random_genome"><code class="name flex">
-<span>def <span class="ident">get_random_genome</span></span>(<span>self) ‑> List[List[int]]</span>
+<span>def <span class="ident">get_random_genome</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>[summary]
@@ -755,7 +1831,7 @@ Returns a random genome (individual).</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_random_genome(self) -&gt; List[List[int]]:
+<pre><code class="python">def get_random_genome(self):
     &#39;&#39;&#39;[summary]
     Returns a random genome (individual).
     ### Returns
@@ -771,14 +1847,14 @@ Returns a random genome (individual).</p>
 </details>
 </dd>
 <dt id="population.Population.get_starting_popultation"><code class="name flex">
-<span>def <span class="ident">get_starting_popultation</span></span>(<span>self, population_size: int) ‑> List[List[List[int]]]</span>
+<span>def <span class="ident">get_starting_popultation</span></span>(<span>self, population_size)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>[summary]
 Returns a list of random genomes (population).</p>
 <h3 id="parameters">Parameters</h3>
 <ol>
-<li>population_size: int<ul>
+<li>population_size<ul>
 <li>number of individuals in the population</li>
 <li>must be &gt;= 1</li>
 </ul>
@@ -791,11 +1867,11 @@ Returns a list of random genomes (population).</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_starting_popultation(self, population_size: int) -&gt; List[List[List[int]]]:
+<pre><code class="python">def get_starting_popultation(self, population_size):
     &#39;&#39;&#39;[summary]
     Returns a list of random genomes (population).
     ### Parameters
-    1. population_size: int
+    1. population_size
         - number of individuals in the population
         - must be &gt;= 1
     ### Returns
@@ -808,15 +1884,177 @@ Returns a list of random genomes (population).</p>
     return population</code></pre>
 </details>
 </dd>
+<dt id="population.Population.is_parent"><code class="name flex">
+<span>def <span class="ident">is_parent</span></span>(<span>self, index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Returns True if the given index is a parent, False otherwise.</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>index<ul>
+<li>index to check</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>bool
+- True if the given index is a parent, False otherwise</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_parent(self, index):
+    &#39;&#39;&#39;[summary]
+    Returns True if the given index is a parent, False otherwise.
+    ### Parameters
+    1. index
+        - index to check
+    ### Returns
+    bool
+        - True if the given index is a parent, False otherwise
+    &#39;&#39;&#39;
+    return index &lt; self.nparents</code></pre>
+</details>
+</dd>
+<dt id="population.Population.move_individual"><code class="name flex">
+<span>def <span class="ident">move_individual</span></span>(<span>self, from_index, to_index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Moves an individual from one index to another.</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>from_index<ul>
+<li>index to move from</li>
+</ul>
+</li>
+<li>to_index<ul>
+<li>index to move to</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def move_individual(self, from_index, to_index):
+    &#39;&#39;&#39;[summary]
+    Moves an individual from one index to another.
+    ### Parameters
+    1. from_index
+        - index to move from
+    2. to_index
+        - index to move to
+    ### Returns
+    None
+    &#39;&#39;&#39;
+    self.population[to_index] = self.population[from_index]
+    self.active_paths[to_index] = self.active_paths[from_index]
+    self.fitnesses[to_index] = self.fitnesses[from_index]</code></pre>
+</details>
+</dd>
+<dt id="population.Population.reset_active_path"><code class="name flex">
+<span>def <span class="ident">reset_active_path</span></span>(<span>self, individual_index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Resets the active path of the individual.</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>individual_index<ul>
+<li>index of the individual</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def reset_active_path(self, individual_index):
+    &#39;&#39;&#39;[summary]
+    Resets the active path of the individual.
+    ### Parameters
+    1. individual_index
+        - index of the individual
+    ### Returns
+    None
+    &#39;&#39;&#39;
+    self.set_active_path(individual_index, self.calculate_active_path(individual_index))</code></pre>
+</details>
+</dd>
+<dt id="population.Population.reset_all_active_paths"><code class="name flex">
+<span>def <span class="ident">reset_all_active_paths</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Resets all active paths in the population.</p>
+<h3 id="returns">Returns</h3>
+<p>None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def reset_all_active_paths(self):
+    &#39;&#39;&#39;[summary]
+    Resets all active paths in the population.
+    ### Returns
+    None
+    &#39;&#39;&#39;
+    for individual_index in range(len(self.population)):
+        self.reset_active_path(individual_index)</code></pre>
+</details>
+</dd>
+<dt id="population.Population.set_active_path"><code class="name flex">
+<span>def <span class="ident">set_active_path</span></span>(<span>self, individual_index, active_path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Sets the active path of the individual.</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>individual_index<ul>
+<li>index of the individual</li>
+</ul>
+</li>
+<li>active_path<ul>
+<li>indexes of active genes</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_active_path(self, individual_index, active_path):
+    &#39;&#39;&#39;[summary]
+    Sets the active path of the individual.
+    ### Parameters
+    1. individual_index
+        - index of the individual
+    2. active_path
+        - indexes of active genes
+    ### Returns
+    None
+    &#39;&#39;&#39;
+    self.active_paths[individual_index] = active_path</code></pre>
+</details>
+</dd>
 <dt id="population.Population.set_children"><code class="name flex">
-<span>def <span class="ident">set_children</span></span>(<span>self, new_children: List[List[List[int]]]) ‑> None</span>
+<span>def <span class="ident">set_children</span></span>(<span>self, new_children)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>[summary]
 Sets the children of the population.</p>
 <h3 id="parameters">Parameters</h3>
 <ol>
-<li>new_children: List[List[List[int]]]<ul>
+<li>new_children<ul>
 <li>new children genomes</li>
 </ul>
 </li>
@@ -837,11 +2075,11 @@ Raises</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_children(self, new_children: List[List[List[int]]]) -&gt; None:
+<pre><code class="python">def set_children(self, new_children):
     &#39;&#39;&#39;[summary]
     Sets the children of the population.
     ### Parameters
-    1. new_children: List[List[List[int]]]
+    1. new_children
         - new children genomes
     ### Returns
     None
@@ -854,23 +2092,63 @@ Raises</p>
         raise ValueError(f&#34;Number of new_children is different than required, number of new_children:{len(new_children)}, required: {len(self.children_indexes)}&#34;)
 
     for i in range(len(new_children)):
-        self.population[self.children_indexes[i]] = new_children[i]</code></pre>
+        child_index = self.children_indexes[i]
+        self.population[child_index] = new_children[i]
+        self.reset_active_path(child_index)
+        self.calculate_fitness(child_index)</code></pre>
+</details>
+</dd>
+<dt id="population.Population.set_fitness"><code class="name flex">
+<span>def <span class="ident">set_fitness</span></span>(<span>self, individual_index, fitness)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Sets the fitness of the individual.</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>individual_index<ul>
+<li>index of the individual</li>
+</ul>
+</li>
+<li>fitness<ul>
+<li>fitness of the individual</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_fitness(self, individual_index, fitness):
+    &#39;&#39;&#39;[summary]
+    Sets the fitness of the individual.
+    ### Parameters
+    1. individual_index
+        - index of the individual
+    2. fitness
+        - fitness of the individual
+    ### Returns
+    None
+    &#39;&#39;&#39;
+    self.fitnesses[individual_index] = fitness</code></pre>
 </details>
 </dd>
 <dt id="population.Population.set_individual"><code class="name flex">
-<span>def <span class="ident">set_individual</span></span>(<span>self, index: int, individual: List[List[int]]) ‑> None</span>
+<span>def <span class="ident">set_individual</span></span>(<span>self, index, individual)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>[summary]
 Sets an individual in the population.</p>
 <h3 id="parameters">Parameters</h3>
 <ol>
-<li>index: int<ul>
+<li>index<ul>
 <li>index of the individual</li>
 <li>must be &gt;= 0</li>
 </ul>
 </li>
-<li>individual: List[List[int]]<ul>
+<li>individual<ul>
 <li>individual to set</li>
 </ul>
 </li>
@@ -881,14 +2159,14 @@ Sets an individual in the population.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_individual(self, index: int, individual: List[List[int]]) -&gt; None:
+<pre><code class="python">def set_individual(self, index, individual):
     &#39;&#39;&#39;[summary]
     Sets an individual in the population.
     ### Parameters
-    1. index: int
+    1. index
         - index of the individual
         - must be &gt;= 0
-    2. individual: List[List[int]]
+    2. individual
         - individual to set
     ### Returns
     None
@@ -896,18 +2174,20 @@ Sets an individual in the population.</p>
     if index &lt; 0:
         raise ValueError(&#34;index must be &gt;= 0&#34;)
 
-    self.population[index] = individual</code></pre>
+    self.population[index] = individual
+    self.reset_active_path(index)
+    self.calculate_fitness(index)</code></pre>
 </details>
 </dd>
 <dt id="population.Population.set_parent"><code class="name flex">
-<span>def <span class="ident">set_parent</span></span>(<span>self, new_parent: List[List[int]]) ‑> None</span>
+<span>def <span class="ident">set_parent</span></span>(<span>self, new_parent, parent_index=0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>[summary]
 Sets the parent of the population.</p>
 <h3 id="parameters">Parameters</h3>
 <ol>
-<li>new_parent: List[List[int]]<ul>
+<li>new_parent<ul>
 <li>new parent genome</li>
 </ul>
 </li>
@@ -918,16 +2198,107 @@ Sets the parent of the population.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_parent(self, new_parent: List[List[int]]) -&gt; None:
+<pre><code class="python">def set_parent(self, new_parent, parent_index = 0):
     &#39;&#39;&#39;[summary]
     Sets the parent of the population.
     ### Parameters
-    1. new_parent: List[List[int]]
+    1. new_parent
         - new parent genome
     ### Returns
     None
     &#39;&#39;&#39;
-    self.population[self.parent_index] = new_parent</code></pre>
+    if parent_index &gt;= self.nparents:
+        raise ValueError(&#34;Parent index out of range&#34;)
+
+    self.population[parent_index] = new_parent
+    self.reset_active_path(parent_index)
+    self.calculate_fitness(parent_index)</code></pre>
+</details>
+</dd>
+<dt id="population.Population.set_parent_by_index"><code class="name flex">
+<span>def <span class="ident">set_parent_by_index</span></span>(<span>self, new_parent_index, parent_index=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Sets the parent by index.</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>parent_index<ul>
+<li>index of the parent</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_parent_by_index(self, new_parent_index, parent_index = 0):
+    &#39;&#39;&#39;[summary]
+    Sets the parent by index.
+    ### Parameters
+    1. parent_index
+        - index of the parent
+    ### Returns
+    None
+    &#39;&#39;&#39;
+    if parent_index &gt;= self.nparents:
+        raise ValueError(&#34;Parent index out of range&#34;)
+    
+    if new_parent_index == parent_index:
+        return
+    else:
+        self.move_individual(new_parent_index, parent_index)</code></pre>
+</details>
+</dd>
+<dt id="population.Population.set_parents_by_indexes"><code class="name flex">
+<span>def <span class="ident">set_parents_by_indexes</span></span>(<span>self, new_parent_1_index, new_parent_2_index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>[summary]
+Sets the parents by indexes.</p>
+<h3 id="parameters">Parameters</h3>
+<ol>
+<li>new_parent_indexes<ul>
+<li>indexes of the new parents</li>
+</ul>
+</li>
+</ol>
+<h3 id="returns">Returns</h3>
+<p>None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_parents_by_indexes(self, new_parent_1_index, new_parent_2_index):
+    &#39;&#39;&#39;[summary]
+    Sets the parents by indexes.
+    ### Parameters
+    1. new_parent_indexes
+        - indexes of the new parents
+    ### Returns
+    None
+    &#39;&#39;&#39;
+    if self.is_parent(new_parent_1_index) and self.is_parent(new_parent_2_index):
+        return
+    elif self.is_parent(new_parent_1_index):
+        if new_parent_1_index == 0:
+            self.move_individual(new_parent_2_index, 1)
+        elif new_parent_1_index == 1:
+            self.move_individual(new_parent_2_index, 0)
+        else:
+            raise ValueError(&#34;Parent index out of range&#34;)
+    elif self.is_parent(new_parent_2_index):
+        if new_parent_2_index == 0:
+            self.move_individual(new_parent_1_index, 1)
+        elif new_parent_2_index == 1:
+            self.move_individual(new_parent_1_index, 0)
+        else:
+            raise ValueError(&#34;Parent index out of range&#34;)
+    else:
+        self.move_individual(new_parent_1_index, 0)
+        self.move_individual(new_parent_2_index, 1)</code></pre>
 </details>
 </dd>
 </dl>
@@ -946,18 +2317,40 @@ Sets the parent of the population.</p>
 <li>
 <h4><code><a title="population.Population" href="#population.Population">Population</a></code></h4>
 <ul class="">
+<li><code><a title="population.Population.calculate_active_path" href="#population.Population.calculate_active_path">calculate_active_path</a></code></li>
+<li><code><a title="population.Population.calculate_fitness" href="#population.Population.calculate_fitness">calculate_fitness</a></code></li>
+<li><code><a title="population.Population.calculate_fitness_all" href="#population.Population.calculate_fitness_all">calculate_fitness_all</a></code></li>
+<li><code><a title="population.Population.get_active_path" href="#population.Population.get_active_path">get_active_path</a></code></li>
 <li><code><a title="population.Population.get_children" href="#population.Population.get_children">get_children</a></code></li>
+<li><code><a title="population.Population.get_children_fitness_array" href="#population.Population.get_children_fitness_array">get_children_fitness_array</a></code></li>
+<li><code><a title="population.Population.get_children_with_active_paths" href="#population.Population.get_children_with_active_paths">get_children_with_active_paths</a></code></li>
+<li><code><a title="population.Population.get_fitness" href="#population.Population.get_fitness">get_fitness</a></code></li>
+<li><code><a title="population.Population.get_fittest_child" href="#population.Population.get_fittest_child">get_fittest_child</a></code></li>
+<li><code><a title="population.Population.get_fittest_child_index" href="#population.Population.get_fittest_child_index">get_fittest_child_index</a></code></li>
+<li><code><a title="population.Population.get_fittest_individual" href="#population.Population.get_fittest_individual">get_fittest_individual</a></code></li>
 <li><code><a title="population.Population.get_individual" href="#population.Population.get_individual">get_individual</a></code></li>
+<li><code><a title="population.Population.get_individual_with_active_path" href="#population.Population.get_individual_with_active_path">get_individual_with_active_path</a></code></li>
+<li><code><a title="population.Population.get_mutation_rate" href="#population.Population.get_mutation_rate">get_mutation_rate</a></code></li>
 <li><code><a title="population.Population.get_ninputs" href="#population.Population.get_ninputs">get_ninputs</a></code></li>
 <li><code><a title="population.Population.get_noutputs" href="#population.Population.get_noutputs">get_noutputs</a></code></li>
 <li><code><a title="population.Population.get_parent" href="#population.Population.get_parent">get_parent</a></code></li>
+<li><code><a title="population.Population.get_parent_fitness" href="#population.Population.get_parent_fitness">get_parent_fitness</a></code></li>
+<li><code><a title="population.Population.get_parent_with_active_path" href="#population.Population.get_parent_with_active_path">get_parent_with_active_path</a></code></li>
 <li><code><a title="population.Population.get_population" href="#population.Population.get_population">get_population</a></code></li>
 <li><code><a title="population.Population.get_random_gene" href="#population.Population.get_random_gene">get_random_gene</a></code></li>
 <li><code><a title="population.Population.get_random_genome" href="#population.Population.get_random_genome">get_random_genome</a></code></li>
 <li><code><a title="population.Population.get_starting_popultation" href="#population.Population.get_starting_popultation">get_starting_popultation</a></code></li>
+<li><code><a title="population.Population.is_parent" href="#population.Population.is_parent">is_parent</a></code></li>
+<li><code><a title="population.Population.move_individual" href="#population.Population.move_individual">move_individual</a></code></li>
+<li><code><a title="population.Population.reset_active_path" href="#population.Population.reset_active_path">reset_active_path</a></code></li>
+<li><code><a title="population.Population.reset_all_active_paths" href="#population.Population.reset_all_active_paths">reset_all_active_paths</a></code></li>
+<li><code><a title="population.Population.set_active_path" href="#population.Population.set_active_path">set_active_path</a></code></li>
 <li><code><a title="population.Population.set_children" href="#population.Population.set_children">set_children</a></code></li>
+<li><code><a title="population.Population.set_fitness" href="#population.Population.set_fitness">set_fitness</a></code></li>
 <li><code><a title="population.Population.set_individual" href="#population.Population.set_individual">set_individual</a></code></li>
 <li><code><a title="population.Population.set_parent" href="#population.Population.set_parent">set_parent</a></code></li>
+<li><code><a title="population.Population.set_parent_by_index" href="#population.Population.set_parent_by_index">set_parent_by_index</a></code></li>
+<li><code><a title="population.Population.set_parents_by_indexes" href="#population.Population.set_parents_by_indexes">set_parents_by_indexes</a></code></li>
 </ul>
 </li>
 </ul>

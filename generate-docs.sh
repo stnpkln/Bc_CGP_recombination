@@ -1,6 +1,1 @@
-pdoc --html ./src/evolution.py -o ./docs
-pdoc --html ./src/genome.py -o ./docs
-pdoc --html ./src/population.py -o ./docs
-pdoc --html ./src/utils.py -o ./docs
-pdoc --html ./src/constants/operations.py -o ./docs
-
+pdoc --html ./src/tournament_selection.py ./src/evolution.py ./src/experiment.py ./src/one_plus_lambda.py ./src/population.py ./src/utils.py ./src/genome.py -o ./docs

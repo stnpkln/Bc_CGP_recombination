@@ -1,3 +1,4 @@
+from __future__ import annotations
 from copy import deepcopy
 from genome import evaluate_fitness, format_inputs_for_new_operation, genome_output, mutate_gene, mutate_individual, active_gene_transplant, subgraph_exchange
 from utils import get_active_gene_indexes, get_output_gene_indexes
@@ -85,9 +86,13 @@ class TestGenome(unittest.TestCase):
         genome_input = np.array([np.array([0, 1, 2, 3, 4, 4, 3, 2, 1, 0])])
         wanted_output = np.array([0, 64, 9216, 186624, 1638400, 1638400, 186624, 9216, 64, 0])
 
-        self.assertEqual(evaluate_fitness(test_genome, get_active_gene_indexes(test_genome, get_output_gene_indexes(test_genome)), genome_input, wanted_output), 0)
+        fitness, is_acceptable = evaluate_fitness(test_genome, get_active_gene_indexes(test_genome, get_output_gene_indexes(test_genome)), genome_input, wanted_output)
+        self.assertEqual(fitness, 0)
+        self.assertTrue(is_acceptable)
 
-        self.assertTrue(evaluate_fitness(test_genome_small, get_active_gene_indexes(test_genome_small, get_output_gene_indexes(test_genome_small)), genome_input, wanted_output) > 0)
+        fitness, is_acceptable = evaluate_fitness(test_genome_small, get_active_gene_indexes(test_genome_small, get_output_gene_indexes(test_genome_small)), genome_input, wanted_output)
+        self.assertTrue(fitness > 0)
+        self.assertFalse(is_acceptable)
 
     def test_mutate_gene(self):
         gene, success = mutate_gene([-1, -1, -1], 0, 3, 3)
